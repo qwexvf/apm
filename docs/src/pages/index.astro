@@ -1,0 +1,297 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "") + "/";
+
+const features = [
+  {
+    icon: "🔒",
+    title: "Lockfile-first",
+    body: "ccpm.lock pins every plugin to an exact commit SHA. Reinstall on any machine — same code, every time.",
+  },
+  {
+    icon: "⚙",
+    title: "Semver constraints",
+    body: "^2.1.0, ~1.0, *, exact tags, SHAs, branches. Full version algebra, not just 'latest'.",
+  },
+  {
+    icon: "⬡",
+    title: "Any marketplace",
+    body: "Register any GitHub repo as a marketplace. Not locked to the official list.",
+  },
+  {
+    icon: "↺",
+    title: "State repair",
+    body: "ccpm sync fixes Claude Code's registry from the lockfile — no re-download needed.",
+  },
+];
+---
+
+<BaseLayout
+  title="ccpm — Claude Code Plugin Manager"
+  description="Lockfile-based plugin manager for Claude Code. Reproducible installs, semver constraints, custom marketplaces."
+>
+  <!-- Hero -->
+  <section class="mx-auto max-w-[82rem] px-5 pt-16 pb-8 md:pt-24">
+
+    <!-- Eyebrow -->
+    <div class="mb-8 flex items-center gap-3">
+      <div class="h-px w-8 bg-[var(--color-signal)]"></div>
+      <span class="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--color-signal)]">
+        claude code plugin manager
+      </span>
+    </div>
+
+    <div class="grid lg:grid-cols-[1fr_auto] gap-12 items-start">
+      <!-- Left: headline + CTA -->
+      <div>
+        <h1 class="font-display font-800 text-[3.5rem] leading-[0.95] tracking-tight text-[var(--color-fg-strong)] md:text-[5.5rem]">
+          Plugins.<br />
+          <span style="color: var(--color-signal);">Pinned.</span>
+        </h1>
+
+        <p class="mt-6 max-w-[48ch] text-[15px] leading-relaxed text-[var(--color-fg)]">
+          Claude Code's built-in plugin system has no lockfile, no version constraints, no reproducibility.
+          <strong class="text-[var(--color-fg-strong)]">ccpm fixes that.</strong>
+        </p>
+
+        <!-- Install command -->
+        <div class="mt-8 inline-flex items-center gap-3 rounded-sm border border-[var(--color-rule-strong)] bg-[var(--color-bg-elev)] px-4 py-3 font-mono text-[13px]">
+          <span class="text-[var(--color-signal)]">$</span>
+          <span class="text-[var(--color-fg-strong)]">go install github.com/qwexvf/ccpm@latest</span>
+        </div>
+
+        <!-- CTA buttons -->
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a
+            href={base + "quick-start/"}
+            class="inline-flex items-center gap-2 rounded-sm bg-[var(--color-signal)] px-5 py-2.5 font-display font-700 text-[13px] text-[#070b11] transition-all hover:brightness-110 hover:shadow-lg hover:shadow-[var(--color-signal)]/20"
+          >
+            Get started
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M3 8h10M9 4l4 4-4 4"/>
+            </svg>
+          </a>
+          <a
+            href="https://github.com/qwexvf/ccpm"
+            class="inline-flex items-center gap-2 rounded-sm border border-[var(--color-rule-strong)] bg-transparent px-5 py-2.5 font-display font-600 text-[13px] text-[var(--color-fg)] transition-colors hover:border-[var(--color-signal)]/60 hover:text-[var(--color-signal)]"
+            target="_blank"
+            rel="noopener"
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: Terminal showcase -->
+      <div class="terminal-window w-full max-w-[520px] rounded-md border border-[var(--color-rule-strong)] bg-[var(--color-bg-code)] overflow-hidden shadow-2xl shadow-black/50">
+        <!-- Title bar -->
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-[var(--color-rule)] bg-[var(--color-bg-elev)]">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f57]"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-[#febc2e]"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-[#28c840]"></span>
+          <span class="ml-2 font-mono text-[11px] text-[var(--color-fg-faint)]">terminal</span>
+        </div>
+        <!-- Terminal body -->
+        <div class="p-5 font-mono text-[12.5px] leading-[1.8] space-y-0.5 min-h-[280px]">
+          <div class="terminal-line" style="animation-delay: 0ms">
+            <span class="text-[var(--color-success)]">~</span>
+            <span class="text-[var(--color-fg-faint)]"> $ </span>
+            <span class="text-[var(--color-fg-strong)]">ccpm add figma@claude-plugins-official@^2.1.0</span>
+          </div>
+          <div class="terminal-line" style="animation-delay: 400ms">
+            <span class="text-[var(--color-fg-mute)]">resolving figma@claude-plugins-official...</span>
+          </div>
+          <div class="terminal-line" style="animation-delay: 800ms">
+            <span class="text-[var(--color-fg-mute)]">resolved: figma </span>
+            <span class="text-[var(--color-signal)]">@ 2.1.30</span>
+            <span class="text-[var(--color-fg-faint)]"> (3590366424de)</span>
+          </div>
+          <div class="terminal-line" style="animation-delay: 1100ms">
+            <span class="text-[var(--color-fg-mute)]">  downloading anthropics/claude-plugins-official...</span>
+          </div>
+          <div class="terminal-line" style="animation-delay: 1600ms">
+            <span class="text-[var(--color-success)]">✓ </span>
+            <span class="text-[var(--color-fg)]">installed figma@claude-plugins-official </span>
+            <span class="text-[var(--color-signal)]">@ 2.1.30</span>
+          </div>
+          <div class="terminal-line h-3" style="animation-delay: 1900ms"></div>
+          <div class="terminal-line" style="animation-delay: 2000ms">
+            <span class="text-[var(--color-success)]">~</span>
+            <span class="text-[var(--color-fg-faint)]"> $ </span>
+            <span class="text-[var(--color-fg-strong)]">ccpm add caveman@caveman</span>
+          </div>
+          <div class="terminal-line" style="animation-delay: 2400ms">
+            <span class="text-[var(--color-success)]">✓ </span>
+            <span class="text-[var(--color-fg)]">installed caveman@caveman </span>
+            <span class="text-[var(--color-signal)]">@ ef6050c5e184</span>
+          </div>
+          <div class="terminal-line h-3" style="animation-delay: 2700ms"></div>
+          <div class="terminal-line" style="animation-delay: 2800ms">
+            <span class="text-[var(--color-success)]">~</span>
+            <span class="text-[var(--color-fg-faint)]"> $ </span>
+            <span class="text-[var(--color-fg-strong)]">git add ccpm.toml ccpm.lock</span>
+          </div>
+          <div class="terminal-line" style="animation-delay: 3200ms">
+            <span class="text-[var(--color-success)]">~</span>
+            <span class="text-[var(--color-fg-faint)]"> $ </span>
+            <span class="text-[var(--color-fg-mute)]">_</span>
+            <span class="cursor-blink text-[var(--color-signal)]">█</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats bar -->
+  <div class="border-y border-[var(--color-rule)] bg-[var(--color-bg-elev)]/60">
+    <div class="mx-auto max-w-[82rem] px-5 py-4">
+      <div class="flex flex-wrap gap-x-10 gap-y-3">
+        {[
+          { val: "35+", label: "plugins in official marketplace" },
+          { val: "semver", label: "constraint resolution" },
+          { val: "sha256", label: "integrity verification" },
+          { val: "Go", label: "single static binary" },
+        ].map(s => (
+          <div class="flex items-baseline gap-2">
+            <span class="font-mono font-700 text-[var(--color-signal)] text-[13px]">{s.val}</span>
+            <span class="font-mono text-[11px] text-[var(--color-fg-mute)]">{s.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- Features grid -->
+  <section class="mx-auto max-w-[82rem] px-5 py-20">
+    <div class="mb-10 flex items-center gap-3">
+      <span class="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--color-fg-faint)]">Why ccpm</span>
+      <div class="flex-1 h-px bg-[var(--color-rule)]"></div>
+    </div>
+
+    <div class="grid gap-px border border-[var(--color-rule)] rounded-sm overflow-hidden sm:grid-cols-2">
+      {features.map((f, i) => (
+        <div class:list={[
+          "group relative bg-[var(--color-bg-elev)] p-7 transition-colors hover:bg-[var(--color-signal-bg)]",
+          i % 2 === 0 && i < features.length - 1 ? "sm:border-r border-[var(--color-rule)]" : "",
+          i < 2 ? "sm:border-b border-[var(--color-rule)]" : "",
+        ]}>
+          <!-- Number -->
+          <div class="absolute top-5 right-6 font-mono text-[10px] text-[var(--color-fg-faint)]">
+            {String(i + 1).padStart(2, "0")}
+          </div>
+          <div class="mb-4 text-2xl leading-none">{f.icon}</div>
+          <h3 class="font-display font-700 text-[var(--color-fg-strong)] mb-2 group-hover:text-[var(--color-signal)] transition-colors">
+            {f.title}
+          </h3>
+          <p class="text-[13.5px] text-[var(--color-fg-mute)] leading-relaxed">{f.body}</p>
+          <!-- Amber accent on hover -->
+          <div class="absolute bottom-0 left-0 h-0.5 w-0 bg-[var(--color-signal)] transition-all duration-300 group-hover:w-full"></div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Quick start strip -->
+  <section class="border-t border-[var(--color-rule)] bg-[var(--color-bg-elev)]/40">
+    <div class="mx-auto max-w-[82rem] px-5 py-16">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--color-signal)]">
+            30 seconds to reproducible
+          </div>
+          <h2 class="font-display font-800 text-[2rem] tracking-tight text-[var(--color-fg-strong)] leading-tight mb-4">
+            Init. Add. Commit.<br/>Done.
+          </h2>
+          <p class="text-[14px] text-[var(--color-fg-mute)] leading-relaxed mb-6">
+            Declare your plugins in <code class="font-mono text-[var(--color-signal)] text-[13px]">ccpm.toml</code>,
+            pin exact versions in <code class="font-mono text-[var(--color-signal)] text-[13px]">ccpm.lock</code>,
+            commit both. Any machine, same plugins.
+          </p>
+          <a
+            href={base + "quick-start/"}
+            class="inline-flex items-center gap-2 font-mono text-[12px] text-[var(--color-signal)] hover:text-[var(--color-fg-strong)] transition-colors"
+          >
+            Read the quick start guide
+            <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M3 8h10M9 4l4 4-4 4"/>
+            </svg>
+          </a>
+        </div>
+
+        <!-- ccpm.toml preview -->
+        <div class="rounded-sm border border-[var(--color-rule-strong)] bg-[var(--color-bg-code)] overflow-hidden">
+          <div class="flex items-center gap-2 px-4 py-2.5 border-b border-[var(--color-rule)] bg-[var(--color-bg-elev)]">
+            <span class="font-mono text-[11px] text-[var(--color-signal)]">ccpm.toml</span>
+          </div>
+          <pre class="p-5 font-mono text-[12px] leading-[1.75] overflow-x-auto !m-0 !border-0 !rounded-none !pt-5 before:hidden"><code><span class="text-[var(--color-fg-faint)]">[plugin_manager]</span>
+<span class="text-[var(--color-fg-mute)]">scope</span> <span class="text-[var(--color-fg-faint)]">=</span> <span class="text-[var(--color-success)]">"user"</span>
+
+<span class="text-[var(--color-fg-faint)]">[plugins]</span>
+<span class="text-[var(--color-fg-mute)]">"figma@claude-plugins-official"</span> <span class="text-[var(--color-fg-faint)]">=</span> <span class="text-[var(--color-signal)]">"^2.1.0"</span>
+<span class="text-[var(--color-fg-mute)]">"caveman@caveman"</span>              <span class="text-[var(--color-fg-faint)]">=</span> <span class="text-[var(--color-signal)]">"*"</span>
+<span class="text-[var(--color-fg-mute)]">"gopls-lsp@claude-plugins-official"</span> <span class="text-[var(--color-fg-faint)]">=</span> <span class="text-[var(--color-signal)]">"1.0.0"</span></code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Command list -->
+  <section class="mx-auto max-w-[82rem] px-5 py-20">
+    <div class="mb-10 flex items-center gap-3">
+      <span class="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--color-fg-faint)]">Commands</span>
+      <div class="flex-1 h-px bg-[var(--color-rule)]"></div>
+    </div>
+
+    <div class="border border-[var(--color-rule)] rounded-sm overflow-hidden">
+      {[
+        { cmd: "ccpm init", desc: "scaffold ccpm.toml", href: "commands/init/" },
+        { cmd: "ccpm add <plugin>", desc: "add + install + lock", href: "commands/add/" },
+        { cmd: "ccpm install", desc: "deterministic install from lockfile", href: "commands/install/" },
+        { cmd: "ccpm update", desc: "bump versions within constraints", href: "commands/update/" },
+        { cmd: "ccpm list", desc: "show installed plugins", href: "commands/list/" },
+        { cmd: "ccpm sync", desc: "repair Claude Code state from lockfile", href: "commands/sync/" },
+      ].map((c, i) => (
+        <a
+          href={base + c.href}
+          class:list={[
+            "group flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-[var(--color-signal-bg)]",
+            i > 0 ? "border-t border-[var(--color-rule)]" : "",
+          ]}
+        >
+          <code class="font-mono text-[13px] text-[var(--color-signal)] min-w-[240px] group-hover:text-[var(--color-fg-strong)] transition-colors">
+            {c.cmd}
+          </code>
+          <span class="text-[13px] text-[var(--color-fg-mute)]">{c.desc}</span>
+          <svg class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="var(--color-signal)" stroke-width="2" stroke-linecap="round">
+            <path d="M3 8h10M9 4l4 4-4 4"/>
+          </svg>
+        </a>
+      ))}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .terminal-line {
+    opacity: 0;
+    animation: fadein 0.3s ease forwards;
+  }
+
+  @keyframes fadein {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .cursor-blink {
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+</style>

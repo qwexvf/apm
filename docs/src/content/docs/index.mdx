@@ -1,0 +1,51 @@
+---
+title: Introduction
+description: ccpm — lockfile-based plugin manager for Claude Code.
+sidebar:
+  order: 0
+---
+
+**ccpm** is a plugin manager for [Claude Code](https://claude.ai/code) that brings `npm ci`-style reproducible installs to Claude Code plugins.
+
+Claude Code's built-in plugin system has no lockfile, no version constraints, and no guaranteed reproducibility — reinstalling on a new machine may pull a different version than what your team tested with. ccpm fixes that.
+
+## What ccpm adds
+
+- **Declarative manifest** (`ccpm.toml`) — list plugins + version constraints
+- **Lockfile** (`ccpm.lock`) — exact versions + commit SHAs, committable to git
+- **Reproducible installs** — `ccpm install` from a lockfile always gets the same code
+- **Semver constraints** — `^2.1.0`, `~1.0`, `*`, exact tags, commit SHAs, branches
+- **Marketplace management** — register custom marketplaces beyond the official one
+- **State repair** — `ccpm sync` fixes Claude Code's registry without re-downloading
+
+## Quick example
+
+```sh
+ccpm init
+ccpm add figma@claude-plugins-official@^2.1.0
+ccpm add caveman@caveman
+```
+
+Produces `ccpm.toml`:
+
+```toml
+[plugin_manager]
+scope = "user"
+
+[plugins]
+"figma@claude-plugins-official" = "^2.1.0"
+"caveman@caveman" = "*"
+```
+
+And `ccpm.lock` with exact versions pinned. Commit both files. On a new machine:
+
+```sh
+ccpm install   # installs exact versions from lockfile
+```
+
+## Where to next
+
+- [Installation](/installation/) — install ccpm
+- [Quick start](/quick-start/) — first plugin in 2 minutes
+- [Commands](/commands/add/) — full command reference
+- [Manifest format](/guides/manifest/) — ccpm.toml options

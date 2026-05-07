@@ -1,0 +1,276 @@
+/* prose-docs — markdown content styling */
+.prose-docs {
+  color: var(--color-fg);
+  font-size: 15px;
+  line-height: 1.72;
+}
+
+/* Headings */
+.prose-docs h1,
+.prose-docs h2,
+.prose-docs h3,
+.prose-docs h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-fg-strong);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.prose-docs h2 {
+  font-size: 1.35rem;
+  margin-top: 2.5rem;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.prose-docs h3 {
+  font-size: 1.05rem;
+  margin-top: 2rem;
+  margin-bottom: 0.6rem;
+}
+
+.prose-docs h4 {
+  font-size: 0.9rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-fg);
+  font-weight: 600;
+}
+
+/* Heading anchors */
+.prose-docs .heading-anchor {
+  margin-left: 0.4em;
+  color: var(--color-fg-faint);
+  opacity: 0;
+  text-decoration: none;
+  transition: opacity 0.15s, color 0.15s;
+  font-weight: 400;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+}
+.prose-docs h2:hover .heading-anchor,
+.prose-docs h3:hover .heading-anchor,
+.prose-docs h4:hover .heading-anchor,
+.prose-docs .heading-anchor.copied {
+  opacity: 1;
+  color: var(--color-signal);
+}
+
+/* Paragraphs */
+.prose-docs p {
+  margin-top: 0;
+  margin-bottom: 1.1rem;
+}
+
+/* Links */
+.prose-docs a {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-decoration-color: rgba(56, 189, 248, 0.3);
+  text-underline-offset: 3px;
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+.prose-docs a:hover {
+  color: var(--color-link-hover);
+  text-decoration-color: var(--color-link-hover);
+}
+[data-theme="light"] .prose-docs a {
+  text-decoration-color: rgba(3, 105, 161, 0.3);
+}
+
+/* Strong / em */
+.prose-docs strong {
+  font-weight: 600;
+  color: var(--color-fg-strong);
+}
+.prose-docs em {
+  font-style: italic;
+  color: var(--color-fg);
+}
+
+/* Inline code */
+.prose-docs :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.83em;
+  background: var(--color-bg-inline);
+  border: 1px solid var(--color-rule-strong);
+  border-radius: 3px;
+  padding: 0.15em 0.4em;
+  color: var(--color-signal);
+  letter-spacing: 0;
+}
+
+/* Code blocks */
+.prose-docs pre {
+  position: relative;
+  background: var(--color-bg-code);
+  border: 1px solid var(--color-rule-strong);
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 1.4rem 0;
+  padding-top: 2.6rem;
+}
+
+.prose-docs pre::before {
+  content: "● ● ●";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0.55rem 1rem;
+  background: var(--color-bg-elev);
+  border-bottom: 1px solid var(--color-rule);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--color-fg-faint);
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.prose-docs pre code {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  display: block;
+  padding: 1rem 1.25rem;
+  color: var(--color-fg);
+  letter-spacing: 0;
+  line-height: 1.65;
+}
+
+/* Copy button */
+.code-copy-btn {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--color-fg-mute);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: color 0.15s, border-color 0.15s;
+}
+.code-copy-btn:hover,
+.code-copy-btn[data-copied="true"] {
+  color: var(--color-signal);
+  border-color: var(--color-signal);
+}
+
+/* Lists */
+.prose-docs ul,
+.prose-docs ol {
+  margin: 0.75rem 0 1.1rem;
+  padding-left: 1.5rem;
+}
+.prose-docs li {
+  margin-bottom: 0.3rem;
+}
+.prose-docs ul > li::marker {
+  color: var(--color-signal);
+}
+.prose-docs ol > li::marker {
+  color: var(--color-signal);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+/* Tables */
+.prose-docs table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.4rem 0;
+  font-size: 0.875rem;
+}
+.prose-docs thead {
+  border-bottom: 1px solid var(--color-rule-strong);
+}
+.prose-docs th {
+  text-align: left;
+  padding: 0.5rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-fg-mute);
+}
+.prose-docs td {
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid var(--color-rule);
+  vertical-align: top;
+}
+.prose-docs tr:last-child td {
+  border-bottom: none;
+}
+.prose-docs tbody tr:hover td {
+  background: var(--color-signal-bg);
+}
+
+/* Blockquotes */
+.prose-docs blockquote {
+  border-left: 2px solid var(--color-signal);
+  margin: 1.4rem 0;
+  padding: 0.75rem 1.1rem;
+  background: var(--color-signal-bg);
+  border-radius: 0 3px 3px 0;
+}
+.prose-docs blockquote p {
+  margin: 0;
+  color: var(--color-fg);
+}
+
+/* GitHub alert callouts */
+.prose-docs .markdown-alert {
+  border-radius: 3px;
+  padding: 0.75rem 1.1rem;
+  margin: 1.4rem 0;
+  border-left: 2px solid;
+}
+.prose-docs .markdown-alert-note {
+  border-color: var(--color-link);
+  background: rgba(56, 189, 248, 0.06);
+}
+.prose-docs .markdown-alert-tip {
+  border-color: var(--color-success);
+  background: rgba(74, 222, 128, 0.06);
+}
+.prose-docs .markdown-alert-warning {
+  border-color: var(--color-signal);
+  background: var(--color-signal-bg);
+}
+.prose-docs .markdown-alert-caution {
+  border-color: var(--color-danger);
+  background: rgba(248, 113, 113, 0.06);
+}
+.prose-docs .markdown-alert-title {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* TOC active */
+.toc-link[data-active="true"] {
+  color: var(--color-signal) !important;
+  border-left-color: var(--color-signal) !important;
+}
+
+/* Divider */
+.prose-docs hr {
+  border: none;
+  border-top: 1px solid var(--color-rule);
+  margin: 2rem 0;
+}
