@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
 set -e
 
-REPO="qwexvf/ccpm"
-BIN="ccpm"
+REPO="qwexvf/apm"
+BIN="apm"
 INSTALL_DIR="${CCPM_INSTALL_DIR:-}"
 
 # ── resolve install dir ────────────────────────────────────────────────────────

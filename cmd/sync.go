@@ -7,15 +7,15 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/qwexvf/ccpm/internal/claude"
-	"github.com/qwexvf/ccpm/internal/config"
+	"github.com/qwexvf/apm/internal/claude"
+	"github.com/qwexvf/apm/internal/config"
 )
 
-// syncCmd repairs Claude Code's state (registry + settings) from ccpm.lock
+// syncCmd repairs Claude Code's state (registry + settings) from apm.lock
 // without downloading anything. Useful when Claude Code's files get out of sync.
 var syncCmd = &cobra.Command{
 	Use:   "sync",
-	Short: "Repair Claude Code state from ccpm.lock (no downloads)",
+	Short: "Repair Claude Code state from apm.lock (no downloads)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dir := manifestDir()
 		m, err := config.LoadManifest(dir)
@@ -45,7 +45,7 @@ var syncCmd = &cobra.Command{
 
 		for _, locked := range lock.Plugins {
 			if _, err := os.Stat(locked.InstallPath); os.IsNotExist(err) {
-				fmt.Printf("  warning: %s install path missing — run: ccpm install\n", locked.ID)
+				fmt.Printf("  warning: %s install path missing — run: apm install\n", locked.ID)
 				continue
 			}
 

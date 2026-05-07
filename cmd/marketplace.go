@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/qwexvf/ccpm/internal/claude"
-	"github.com/qwexvf/ccpm/internal/config"
-	mktpkg "github.com/qwexvf/ccpm/internal/marketplace"
+	"github.com/qwexvf/apm/internal/claude"
+	"github.com/qwexvf/apm/internal/config"
+	mktpkg "github.com/qwexvf/apm/internal/marketplace"
 )
 
 var marketplaceCmd = &cobra.Command{

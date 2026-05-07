@@ -1,4 +1,4 @@
-module github.com/qwexvf/ccpm
+module github.com/qwexvf/apm
 
 go 1.26.2
 

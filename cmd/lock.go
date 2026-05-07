@@ -6,15 +6,15 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/qwexvf/ccpm/internal/claude"
-	"github.com/qwexvf/ccpm/internal/config"
-	"github.com/qwexvf/ccpm/internal/fetcher"
-	"github.com/qwexvf/ccpm/internal/resolver"
+	"github.com/qwexvf/apm/internal/claude"
+	"github.com/qwexvf/apm/internal/config"
+	"github.com/qwexvf/apm/internal/fetcher"
+	"github.com/qwexvf/apm/internal/resolver"
 )
 
 var lockCmd = &cobra.Command{
 	Use:   "lock",
-	Short: "Regenerate ccpm.lock from the manifest constraints",
+	Short: "Regenerate apm.lock from the manifest constraints",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dir := manifestDir()
 		m, err := config.LoadManifest(dir)

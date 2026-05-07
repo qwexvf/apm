@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/qwexvf/ccpm/internal/claude"
-	"github.com/qwexvf/ccpm/internal/config"
-	"github.com/qwexvf/ccpm/internal/marketplace"
+	"github.com/qwexvf/apm/internal/claude"
+	"github.com/qwexvf/apm/internal/config"
+	"github.com/qwexvf/apm/internal/marketplace"
 )
 
 var searchCmd = &cobra.Command{
@@ -40,7 +40,7 @@ var searchCmd = &cobra.Command{
 		}
 
 		if len(km) == 0 {
-			fmt.Println("no marketplaces registered — run: ccpm marketplace add")
+			fmt.Println("no marketplaces registered — run: apm marketplace add")
 			return nil
 		}
 
@@ -57,7 +57,7 @@ var searchCmd = &cobra.Command{
 			idx := marketplace.New(id, rec.Source.Repo, localPath)
 			plugins, err := idx.ListPlugins()
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "warning: could not read marketplace %q (try: ccpm marketplace update)\n", id)
+				fmt.Fprintf(os.Stderr, "warning: could not read marketplace %q (try: apm marketplace update)\n", id)
 				continue
 			}
 

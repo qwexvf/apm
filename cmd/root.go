@@ -16,9 +16,9 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:     "ccpm",
+	Use:     "apm",
 	Short:   "Claude Code Plugin Manager",
-	Long:    "ccpm manages Claude Code plugins with lockfile-based reproducible installs.",
+	Long:    "apm manages Claude Code plugins with lockfile-based reproducible installs.",
 	Version: buildVersion,
 }
 
@@ -64,7 +64,7 @@ func resolveScope() string {
 	return "user"
 }
 
-// manifestDir returns the directory where ccpm.toml lives based on scope.
+// manifestDir returns the directory where apm.toml lives based on scope.
 func manifestDir() string {
 	scope := resolveScope()
 	if scope == "local" {

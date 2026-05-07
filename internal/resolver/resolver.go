@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/qwexvf/ccpm/internal/fetcher"
-	"github.com/qwexvf/ccpm/pkg/version"
+	"github.com/qwexvf/apm/internal/fetcher"
+	"github.com/qwexvf/apm/pkg/version"
 )
 
 // Result is the resolved concrete version for a plugin.

@@ -7,12 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/qwexvf/ccpm/internal/config"
+	"github.com/qwexvf/apm/internal/config"
 )
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Scaffold a ccpm.toml manifest",
+	Short: "Scaffold a apm.toml manifest",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dir := manifestDir()
 		path := filepath.Join(dir, config.ManifestFile)
@@ -40,8 +40,8 @@ var initCmd = &cobra.Command{
 
 		fmt.Printf("created %s\n", path)
 		fmt.Println("\nNext steps:")
-		fmt.Println("  ccpm add <plugin>@<marketplace>   # add a plugin")
-		fmt.Println("  ccpm install                       # install from lockfile")
+		fmt.Println("  apm add <plugin>@<marketplace>   # add a plugin")
+		fmt.Println("  apm install                       # install from lockfile")
 		return nil
 	},
 }

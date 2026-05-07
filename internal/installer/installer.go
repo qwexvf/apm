@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/qwexvf/ccpm/internal/claude"
-	"github.com/qwexvf/ccpm/internal/fetcher"
+	"github.com/qwexvf/apm/internal/claude"
+	"github.com/qwexvf/apm/internal/fetcher"
 )
 
 // Result is returned after a successful install.

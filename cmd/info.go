@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/qwexvf/ccpm/internal/claude"
-	"github.com/qwexvf/ccpm/internal/config"
-	"github.com/qwexvf/ccpm/internal/marketplace"
+	"github.com/qwexvf/apm/internal/claude"
+	"github.com/qwexvf/apm/internal/config"
+	"github.com/qwexvf/apm/internal/marketplace"
 )
 
 var infoCmd = &cobra.Command{

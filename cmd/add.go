@@ -7,11 +7,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/qwexvf/ccpm/internal/claude"
-	"github.com/qwexvf/ccpm/internal/config"
-	"github.com/qwexvf/ccpm/internal/fetcher"
-	"github.com/qwexvf/ccpm/internal/installer"
-	"github.com/qwexvf/ccpm/internal/resolver"
+	"github.com/qwexvf/apm/internal/claude"
+	"github.com/qwexvf/apm/internal/config"
+	"github.com/qwexvf/apm/internal/fetcher"
+	"github.com/qwexvf/apm/internal/installer"
+	"github.com/qwexvf/apm/internal/resolver"
 )
 
 var addCmd = &cobra.Command{
@@ -53,7 +53,7 @@ var addCmd = &cobra.Command{
 			}
 		}
 		if repo == "" {
-			return fmt.Errorf("unknown marketplace %q — register it with: ccpm marketplace add %s github:org/repo", marketplace, marketplace)
+			return fmt.Errorf("unknown marketplace %q — register it with: apm marketplace add %s github:org/repo", marketplace, marketplace)
 		}
 
 		ctx := context.Background()

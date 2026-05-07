@@ -7,21 +7,21 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/qwexvf/ccpm/internal/claude"
-	"github.com/qwexvf/ccpm/internal/config"
-	"github.com/qwexvf/ccpm/internal/fetcher"
-	"github.com/qwexvf/ccpm/internal/installer"
+	"github.com/qwexvf/apm/internal/claude"
+	"github.com/qwexvf/apm/internal/config"
+	"github.com/qwexvf/apm/internal/fetcher"
+	"github.com/qwexvf/apm/internal/installer"
 )
 
 var installCmd = &cobra.Command{
 	Use:   "install",
-	Short: "Install all plugins from ccpm.lock (deterministic)",
+	Short: "Install all plugins from apm.lock (deterministic)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dir := manifestDir()
 
 		m, err := config.LoadManifest(dir)
 		if err != nil {
-			return fmt.Errorf("no manifest found — run: ccpm init")
+			return fmt.Errorf("no manifest found — run: apm init")
 		}
 
 		lock, err := config.LoadLock(dir)
@@ -30,7 +30,7 @@ var installCmd = &cobra.Command{
 		}
 
 		if len(lock.Plugins) == 0 {
-			fmt.Println("lockfile is empty — run: ccpm add <plugin>")
+			fmt.Println("lockfile is empty — run: apm add <plugin>")
 			return nil
 		}
 

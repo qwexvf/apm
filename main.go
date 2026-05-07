@@ -1,6 +1,6 @@
 package main
 
-import "github.com/qwexvf/ccpm/cmd"
+import "github.com/qwexvf/apm/cmd"
 
 var (
 	version = "dev"

@@ -8,8 +8,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/qwexvf/ccpm/internal/claude"
-	"github.com/qwexvf/ccpm/internal/config"
+	"github.com/qwexvf/apm/internal/claude"
+	"github.com/qwexvf/apm/internal/config"
 )
 
 var listCmd = &cobra.Command{
@@ -19,7 +19,7 @@ var listCmd = &cobra.Command{
 		dir := manifestDir()
 		m, err := config.LoadManifest(dir)
 		if err != nil {
-			return fmt.Errorf("no manifest — run: ccpm init")
+			return fmt.Errorf("no manifest — run: apm init")
 		}
 
 		claudeDir := claude.Dir(m.PluginManager.Scope)
