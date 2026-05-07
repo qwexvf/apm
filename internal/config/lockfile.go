@@ -8,7 +8,7 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-const LockFile = "ccpm.lock"
+const LockFile = "apm.lock"
 
 type Lock struct {
 	Plugins []LockedPlugin `toml:"plugin"`

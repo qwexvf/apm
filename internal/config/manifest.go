@@ -9,7 +9,7 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-const ManifestFile = "ccpm.toml"
+const ManifestFile = "apm.toml"
 
 type MarketplaceSource struct {
 	Source string `toml:"source"` // "github"

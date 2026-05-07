@@ -70,8 +70,8 @@ func TestManifestSaveLoad(t *testing.T) {
 	if err := m.Save(dir); err != nil {
 		t.Fatalf("Save: %v", err)
 	}
-	if _, err := os.Stat(dir + "/ccpm.toml"); err != nil {
-		t.Fatal("ccpm.toml not created")
+	if _, err := os.Stat(dir + "/apm.toml"); err != nil {
+		t.Fatal("apm.toml not created")
 	}
 
 	m2, err := LoadManifest(dir)
