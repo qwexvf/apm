@@ -64,10 +64,12 @@ func MatchConstraint(c, v string) (bool, error) {
 	return con.Check(sv), nil
 }
 
-// LatestMatching returns the highest version from versions that satisfies constraint c.
-// versions must be semver strings; non-parseable strings are silently skipped.
+// LatestMatching returns the highest stable version from versions that satisfies
+// constraint c. Pre-release versions are skipped unless c explicitly references
+// one or no stable versions match.
 func LatestMatching(c string, versions []string) (string, error) {
 	var best *semver.Version
+	var bestPre *semver.Version // fallback if no stable matches
 	for _, raw := range versions {
 		v, err := semver.NewVersion(raw)
 		if err != nil {
@@ -77,12 +79,21 @@ func LatestMatching(c string, versions []string) (string, error) {
 		if err != nil || !ok {
 			continue
 		}
+		if v.Prerelease() != "" {
+			if bestPre == nil || v.GreaterThan(bestPre) {
+				bestPre = v
+			}
+			continue
+		}
 		if best == nil || v.GreaterThan(best) {
 			best = v
 		}
 	}
-	if best == nil {
-		return "", fmt.Errorf("no version matching %q", c)
+	if best != nil {
+		return best.Original(), nil
 	}
-	return best.Original(), nil
+	if bestPre != nil {
+		return bestPre.Original(), nil
+	}
+	return "", fmt.Errorf("no version matching %q", c)
 }

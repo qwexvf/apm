@@ -9,16 +9,11 @@ import (
 )
 
 // Settings represents the relevant parts of ~/.claude/settings.json.
-// Unknown keys are preserved via rawExtra.
+// Only enabledPlugins is parsed; all other keys (including
+// extraKnownMarketplaces, whose shape varies) are preserved verbatim.
 type Settings struct {
-	EnabledPlugins       map[string]bool        `json:"enabledPlugins,omitempty"`
-	ExtraKnownMarketplaces []MarketplaceEntry   `json:"extraKnownMarketplaces,omitempty"`
-	rest                 map[string]json.RawMessage
-}
-
-type MarketplaceEntry struct {
-	Source          string `json:"source"`
-	InstallLocation string `json:"installLocation,omitempty"`
+	EnabledPlugins map[string]bool
+	rest           map[string]json.RawMessage
 }
 
 // LoadSettings reads settings.json from claudeDir.
@@ -35,7 +30,6 @@ func LoadSettings(claudeDir string) (*Settings, error) {
 		return nil, fmt.Errorf("read settings.json: %w", err)
 	}
 
-	// unmarshal into raw map to preserve all keys
 	raw := map[string]json.RawMessage{}
 	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, fmt.Errorf("parse settings.json: %w", err)
@@ -52,23 +46,16 @@ func LoadSettings(claudeDir string) (*Settings, error) {
 		}
 		delete(raw, "enabledPlugins")
 	}
-	if v, ok := raw["extraKnownMarketplaces"]; ok {
-		if err := json.Unmarshal(v, &s.ExtraKnownMarketplaces); err != nil {
-			return nil, fmt.Errorf("parse extraKnownMarketplaces: %w", err)
-		}
-		delete(raw, "extraKnownMarketplaces")
-	}
 
 	s.rest = raw
 	return s, nil
 }
 
-// Save writes settings.json atomically, preserving unknown keys.
+// Save writes settings.json atomically, preserving all unknown keys.
 func (s *Settings) Save(claudeDir string) error {
 	path := filepath.Join(claudeDir, "settings.json")
 
-	// rebuild full map
-	out := make(map[string]json.RawMessage, len(s.rest)+2)
+	out := make(map[string]json.RawMessage, len(s.rest)+1)
 	maps.Copy(out, s.rest)
 
 	if len(s.EnabledPlugins) > 0 {
@@ -77,13 +64,6 @@ func (s *Settings) Save(claudeDir string) error {
 			return err
 		}
 		out["enabledPlugins"] = b
-	}
-	if len(s.ExtraKnownMarketplaces) > 0 {
-		b, err := json.Marshal(s.ExtraKnownMarketplaces)
-		if err != nil {
-			return err
-		}
-		out["extraKnownMarketplaces"] = b
 	}
 
 	data, err := json.MarshalIndent(out, "", "  ")
@@ -110,17 +90,4 @@ func (s *Settings) EnablePlugin(id string, enabled bool) {
 // DisablePlugin removes the plugin entry entirely.
 func (s *Settings) DisablePlugin(id string) {
 	delete(s.EnabledPlugins, id)
-}
-
-// AddMarketplace adds a marketplace URL if not already present.
-func (s *Settings) AddMarketplace(source, installLocation string) {
-	for _, e := range s.ExtraKnownMarketplaces {
-		if e.Source == source {
-			return
-		}
-	}
-	s.ExtraKnownMarketplaces = append(s.ExtraKnownMarketplaces, MarketplaceEntry{
-		Source:          source,
-		InstallLocation: installLocation,
-	})
 }
