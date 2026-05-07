@@ -1,0 +1,78 @@
+package cmd
+
+import (
+	"fmt"
+	"os"
+	"strings"
+	"text/tabwriter"
+
+	"github.com/spf13/cobra"
+
+	"github.com/qwexvf/ccpm/internal/claude"
+	"github.com/qwexvf/ccpm/internal/config"
+	"github.com/qwexvf/ccpm/internal/marketplace"
+)
+
+var searchCmd = &cobra.Command{
+	Use:   "search [query]",
+	Short: "Search available plugins across marketplaces",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		query := strings.Join(args, " ")
+
+		dir := manifestDir()
+		m, err := config.LoadManifest(dir)
+		if err != nil {
+			m = config.NewManifest()
+			m.PluginManager.Scope = resolveScope()
+		}
+
+		claudeDir := claude.Dir(m.PluginManager.Scope)
+		km, err := claude.LoadKnownMarketplaces(claudeDir)
+		if err != nil {
+			return err
+		}
+
+		// merge manifest marketplaces
+		for id, ms := range m.Marketplaces {
+			if _, exists := km[id]; !exists {
+				km.Add(id, ms.Repo, "")
+			}
+		}
+
+		if len(km) == 0 {
+			fmt.Println("no marketplaces registered — run: ccpm marketplace add")
+			return nil
+		}
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "PLUGIN ID\tDESCRIPTION\tAUTHOR")
+
+		mktplaceDir := claude.MarketplaceCacheDir(claudeDir)
+		for id, rec := range km {
+			localPath := rec.InstallLocation
+			if localPath == "" {
+				localPath = mktplaceDir + "/" + id
+			}
+
+			idx := marketplace.New(id, rec.Source.Repo, localPath)
+			plugins, err := idx.ListPlugins()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "warning: could not read marketplace %q (try: ccpm marketplace update)\n", id)
+				continue
+			}
+
+			for _, p := range plugins {
+				if query != "" && !strings.Contains(strings.ToLower(p.Name+" "+p.Description), strings.ToLower(query)) {
+					continue
+				}
+				desc := p.Description
+				if len(desc) > 60 {
+					desc = desc[:57] + "..."
+				}
+				fmt.Fprintf(w, "%s\t%s\t%s\n", p.ID, desc, p.Author)
+			}
+		}
+
+		return w.Flush()
+	},
+}

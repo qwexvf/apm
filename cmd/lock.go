@@ -1,0 +1,78 @@
+package cmd
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/spf13/cobra"
+
+	"github.com/qwexvf/ccpm/internal/claude"
+	"github.com/qwexvf/ccpm/internal/config"
+	"github.com/qwexvf/ccpm/internal/fetcher"
+	"github.com/qwexvf/ccpm/internal/resolver"
+)
+
+var lockCmd = &cobra.Command{
+	Use:   "lock",
+	Short: "Regenerate ccpm.lock from the manifest constraints",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		dir := manifestDir()
+		m, err := config.LoadManifest(dir)
+		if err != nil {
+			return err
+		}
+
+		claudeDir := claude.Dir(m.PluginManager.Scope)
+		km, _ := claude.LoadKnownMarketplaces(claudeDir)
+		reg, _ := claude.LoadRegistry(claudeDir)
+
+		gh := fetcher.NewGitHub()
+		ctx := context.Background()
+		lock := config.NewLock()
+
+		for id, constraint := range m.Plugins {
+			_, mktplace, err := config.SplitID(id)
+			if err != nil {
+				return err
+			}
+			repo := km.Repo(mktplace)
+			if repo == "" {
+				if ms, ok := m.Marketplaces[mktplace]; ok {
+					repo = ms.Repo
+				}
+			}
+			if repo == "" {
+				fmt.Printf("  skip %s: unknown marketplace\n", id)
+				continue
+			}
+
+			fmt.Printf("resolving %s @ %s...\n", id, constraint)
+			res, err := resolver.Resolve(ctx, gh, repo, constraint)
+			if err != nil {
+				return err
+			}
+
+			// use existing install path if available
+			installPath := ""
+			if entry := reg.UserEntry(id); entry != nil {
+				installPath = entry.InstallPath
+			}
+
+			lock.Upsert(config.LockedPlugin{
+				ID:          id,
+				Version:     res.Version,
+				CommitSHA:   res.CommitSHA,
+				ResolvedURL: "https://github.com/" + repo,
+				InstallPath: installPath,
+			})
+			fmt.Printf("  locked %s @ %s\n", id, res.Version)
+		}
+
+		if err := lock.Save(dir); err != nil {
+			return err
+		}
+
+		fmt.Printf("\n%s updated (%d plugins)\n", config.LockFile, len(lock.Plugins))
+		return nil
+	},
+}

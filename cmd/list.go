@@ -1,0 +1,64 @@
+package cmd
+
+import (
+	"fmt"
+	"os"
+	"text/tabwriter"
+
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
+
+	"github.com/qwexvf/ccpm/internal/claude"
+	"github.com/qwexvf/ccpm/internal/config"
+)
+
+var listCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List installed plugins",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		dir := manifestDir()
+		m, err := config.LoadManifest(dir)
+		if err != nil {
+			return fmt.Errorf("no manifest — run: ccpm init")
+		}
+
+		claudeDir := claude.Dir(m.PluginManager.Scope)
+		reg, err := claude.LoadRegistry(claudeDir)
+		if err != nil {
+			return err
+		}
+
+		lock, _ := config.LoadLock(dir)
+
+		if len(m.Plugins) == 0 {
+			fmt.Println("no plugins in manifest")
+			return nil
+		}
+
+		green := color.New(color.FgGreen).SprintFunc()
+		yellow := color.New(color.FgYellow).SprintFunc()
+
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(w, "PLUGIN\tVERSION\tCONSTRAINT\tSTATUS")
+
+		for id, constraint := range m.Plugins {
+			entries := reg.Get(id)
+			locked := lock.Get(id)
+
+			version := "-"
+			status := yellow("not installed")
+
+			if len(entries) > 0 {
+				version = entries[0].Version
+				status = green("installed")
+			} else if locked != nil {
+				version = locked.Version
+				status = yellow("not installed")
+			}
+
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", id, version, constraint, status)
+		}
+
+		return w.Flush()
+	},
+}
