@@ -56,7 +56,11 @@ var installCmd = &cobra.Command{
 			}
 
 			// find repo for this marketplace
-			km, _ := claude.LoadKnownMarketplaces(claudeDir)
+			km, err := claude.LoadKnownMarketplaces(claudeDir)
+			if err != nil {
+				failed = append(failed, locked.ID+": load marketplaces: "+err.Error())
+				continue
+			}
 			repo := km.Repo(marketplace)
 			if repo == "" {
 				if ms, ok := m.Marketplaces[marketplace]; ok {

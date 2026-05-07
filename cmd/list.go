@@ -28,7 +28,10 @@ var listCmd = &cobra.Command{
 			return err
 		}
 
-		lock, _ := config.LoadLock(dir)
+		lock, err := config.LoadLock(dir)
+		if err != nil {
+			return err
+		}
 
 		if len(m.Plugins) == 0 {
 			fmt.Println("no plugins in manifest")

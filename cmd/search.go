@@ -66,8 +66,8 @@ var searchCmd = &cobra.Command{
 					continue
 				}
 				desc := p.Description
-				if len(desc) > 60 {
-					desc = desc[:57] + "..."
+				if runes := []rune(desc); len(runes) > 60 {
+					desc = string(runes[:57]) + "..."
 				}
 				fmt.Fprintf(w, "%s\t%s\t%s\n", p.ID, desc, p.Author)
 			}

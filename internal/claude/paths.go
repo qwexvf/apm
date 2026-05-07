@@ -9,10 +9,16 @@ import (
 // scope="user" → ~/.claude, scope="local" → ./.claude (relative to cwd).
 func Dir(scope string) string {
 	if scope == "local" {
-		cwd, _ := os.Getwd()
+		cwd, err := os.Getwd()
+		if err != nil {
+			cwd = "."
+		}
 		return filepath.Join(cwd, ".claude")
 	}
-	home, _ := os.UserHomeDir()
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = os.Getenv("HOME")
+	}
 	return filepath.Join(home, ".claude")
 }
 

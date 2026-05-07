@@ -23,8 +23,14 @@ var lockCmd = &cobra.Command{
 		}
 
 		claudeDir := claude.Dir(m.PluginManager.Scope)
-		km, _ := claude.LoadKnownMarketplaces(claudeDir)
-		reg, _ := claude.LoadRegistry(claudeDir)
+		km, err := claude.LoadKnownMarketplaces(claudeDir)
+		if err != nil {
+			return fmt.Errorf("load marketplaces: %w", err)
+		}
+		reg, err := claude.LoadRegistry(claudeDir)
+		if err != nil {
+			return fmt.Errorf("load registry: %w", err)
+		}
 
 		gh := fetcher.NewGitHub()
 		ctx := context.Background()

@@ -68,7 +68,10 @@ var infoCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		lock, _ := config.LoadLock(dir)
+		lock, err := config.LoadLock(dir)
+		if err != nil {
+			return err
+		}
 
 		fmt.Printf("name:        %s\n", entry.Name)
 		fmt.Printf("id:          %s\n", entry.ID)

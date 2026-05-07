@@ -48,15 +48,18 @@ func LoadManifest(dir string) (*Manifest, error) {
 	return m, nil
 }
 
-// Save writes the manifest to dir/ccpm.toml.
+// Save writes the manifest to dir/apm.toml.
 func (m *Manifest) Save(dir string) error {
 	path := filepath.Join(dir, ManifestFile)
 	f, err := os.Create(path)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-	return toml.NewEncoder(f).Encode(m)
+	if err := toml.NewEncoder(f).Encode(m); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
 }
 
 // AddPlugin adds or updates a plugin entry in the manifest.

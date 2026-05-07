@@ -78,12 +78,9 @@ func (g *GitHub) DownloadTarball(ctx context.Context, owner, repo, ref, destDir 
 	if err != nil {
 		return "", err
 	}
-	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
-	}
 	req.Header.Set("Accept", "application/vnd.github+json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := g.client.Client().Do(req)
 	if err != nil {
 		return "", fmt.Errorf("download tarball: %w", err)
 	}
@@ -154,7 +151,9 @@ func extractTarGz(r io.Reader, destDir string) (string, error) {
 				f.Close()
 				return "", err
 			}
-			f.Close()
+			if err := f.Close(); err != nil {
+				return "", err
+			}
 		case tar.TypeSymlink:
 			os.Remove(target)
 			if err := os.Symlink(hdr.Linkname, target); err != nil {

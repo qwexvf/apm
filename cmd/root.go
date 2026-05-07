@@ -68,9 +68,17 @@ func resolveScope() string {
 func manifestDir() string {
 	scope := resolveScope()
 	if scope == "local" {
-		cwd, _ := os.Getwd()
+		cwd, err := os.Getwd()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "warning: cannot determine working directory:", err)
+			cwd = "."
+		}
 		return cwd
 	}
-	home, _ := os.UserHomeDir()
+	home, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "warning: cannot determine home directory:", err)
+		home = os.Getenv("HOME")
+	}
 	return home + "/.claude"
 }

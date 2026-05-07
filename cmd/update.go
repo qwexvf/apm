@@ -63,7 +63,10 @@ var updateCmd = &cobra.Command{
 			repo       string
 		}
 
-		km, _ := claude.LoadKnownMarketplaces(claudeDir)
+		km, err := claude.LoadKnownMarketplaces(claudeDir)
+		if err != nil {
+			return fmt.Errorf("load marketplaces: %w", err)
+		}
 		var updates []update
 
 		for id, constraint := range toUpdate {
