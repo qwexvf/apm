@@ -66,32 +66,48 @@ if [ -z "$TAG" ]; then
   fi
 fi
 
-# ── download binary ───────────────────────────────────────────────────────────
-EXT=""
-[ "$GOOS" = "windows" ] && EXT=".exe"
+# ── download archive ──────────────────────────────────────────────────────────
+if [ "$GOOS" = "windows" ]; then
+  ARCHIVE_EXT=".zip"
+  BIN_EXT=".exe"
+else
+  ARCHIVE_EXT=".tar.gz"
+  BIN_EXT=""
+fi
 
-FILENAME="${BIN}_${TAG}_${GOOS}_${GOARCH}${EXT}"
+FILENAME="${BIN}_${TAG}_${GOOS}_${GOARCH}${ARCHIVE_EXT}"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${TAG}/${FILENAME}"
-TMP="$(mktemp)"
+TMPDIR="$(mktemp -d)"
+ARCHIVE="${TMPDIR}/${FILENAME}"
 
 echo "downloading ${BIN} ${TAG} (${GOOS}/${GOARCH})..."
 
 if command -v curl >/dev/null 2>&1; then
-  curl -fsSL "$DOWNLOAD_URL" -o "$TMP"
+  curl -fsSL "$DOWNLOAD_URL" -o "$ARCHIVE"
 else
-  wget -qO "$TMP" "$DOWNLOAD_URL"
+  wget -qO "$ARCHIVE" "$DOWNLOAD_URL"
 fi
 
-chmod +x "$TMP"
+# ── extract binary ────────────────────────────────────────────────────────────
+if [ "$ARCHIVE_EXT" = ".tar.gz" ]; then
+  tar -xzf "$ARCHIVE" -C "$TMPDIR" "${BIN}${BIN_EXT}"
+else
+  unzip -q "$ARCHIVE" "${BIN}${BIN_EXT}" -d "$TMPDIR"
+fi
+
+EXTRACTED="${TMPDIR}/${BIN}${BIN_EXT}"
+chmod +x "$EXTRACTED"
 
 # ── install ───────────────────────────────────────────────────────────────────
-DEST="${INSTALL_DIR}/${BIN}${EXT}"
+DEST="${INSTALL_DIR}/${BIN}${BIN_EXT}"
 
 if [ -w "$INSTALL_DIR" ]; then
-  mv "$TMP" "$DEST"
+  mv "$EXTRACTED" "$DEST"
 else
-  sudo mv "$TMP" "$DEST"
+  sudo mv "$EXTRACTED" "$DEST"
 fi
+
+rm -rf "$TMPDIR"
 
 echo "installed ${BIN} ${TAG} → ${DEST}"
 
