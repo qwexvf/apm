@@ -58,6 +58,20 @@ if [ -z "$TAG" ]; then
     echo "no release found — building from source with go install..."
     GOBIN="$INSTALL_DIR" go install "github.com/${REPO}@latest"
     echo "installed ${BIN} → ${INSTALL_DIR}/${BIN}"
+    COMMANDS_DIR="${HOME}/.claude/commands"
+    COMMANDS_BASE="https://raw.githubusercontent.com/${REPO}/main/.claude/commands"
+    COMMANDS="apm-add apm-remove apm-list apm-search apm-update apm-info apm-install apm-marketplace"
+    mkdir -p "$COMMANDS_DIR"
+    echo "installing slash commands → ${COMMANDS_DIR}/"
+    for cmd in $COMMANDS; do
+      dest="${COMMANDS_DIR}/${cmd}.md"
+      if command -v curl >/dev/null 2>&1; then
+        curl -fsSL "${COMMANDS_BASE}/${cmd}.md" -o "$dest"
+      else
+        wget -qO "$dest" "${COMMANDS_BASE}/${cmd}.md"
+      fi
+    done
+    echo "installed ${BIN} slash commands ($(echo $COMMANDS | wc -w | tr -d ' ') commands)"
     exit 0
   else
     echo "no release found and go not available" >&2
@@ -113,6 +127,23 @@ fi
 mv "$EXTRACTED" "$DEST"
 
 echo "installed ${BIN} ${TAG} → ${DEST}"
+
+# ── install slash commands ─────────────────────────────────────────────────────
+COMMANDS_DIR="${HOME}/.claude/commands"
+COMMANDS_BASE="https://raw.githubusercontent.com/${REPO}/${TAG}/.claude/commands"
+COMMANDS="apm-add apm-remove apm-list apm-search apm-update apm-info apm-install apm-marketplace"
+
+mkdir -p "$COMMANDS_DIR"
+echo "installing slash commands → ${COMMANDS_DIR}/"
+for cmd in $COMMANDS; do
+  dest="${COMMANDS_DIR}/${cmd}.md"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "${COMMANDS_BASE}/${cmd}.md" -o "$dest"
+  else
+    wget -qO "$dest" "${COMMANDS_BASE}/${cmd}.md"
+  fi
+done
+echo "installed ${BIN} slash commands ($(echo $COMMANDS | wc -w | tr -d ' ') commands)"
 
 # ── PATH hint ─────────────────────────────────────────────────────────────────
 if ! command -v "$BIN" >/dev/null 2>&1; then
