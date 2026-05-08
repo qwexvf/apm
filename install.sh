@@ -104,12 +104,13 @@ chmod +x "$EXTRACTED"
 # ── install ───────────────────────────────────────────────────────────────────
 DEST="${INSTALL_DIR}/${BIN}${BIN_EXT}"
 
-if [ -w "$INSTALL_DIR" ]; then
-  mv "$EXTRACTED" "$DEST"
-else
-  echo "note: ${INSTALL_DIR} requires elevated permissions — running sudo"
-  sudo mv "$EXTRACTED" "$DEST"
+if [ ! -w "$INSTALL_DIR" ]; then
+  echo "error: ${INSTALL_DIR} is not writable" >&2
+  echo "set APM_INSTALL_DIR to a directory you own, e.g.:" >&2
+  echo "  APM_INSTALL_DIR=~/.local/bin sh install.sh" >&2
+  exit 1
 fi
+mv "$EXTRACTED" "$DEST"
 
 echo "installed ${BIN} ${TAG} → ${DEST}"
 
