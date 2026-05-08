@@ -4,14 +4,6 @@ A minimal, opinionated documentation site template. Astro 6 + React 19 + Tailwin
 
 [Use this template](https://github.com/qwexvf/astro-docs-template/generate) → click the button on GitHub, name your repo, clone, and you're shipping docs.
 
-## Screenshots
-
-![Landing page](https://github.com/user-attachments/assets/648673f7-3e4e-4d76-a81a-c2465aedd6d5)
-
-![Doc page with sidebar and TOC](https://github.com/user-attachments/assets/2f10f537-f6b2-4d22-be3a-affca958ed72)
-
-![Reference page](https://github.com/user-attachments/assets/e665ab8e-ea7a-4683-b173-9ecd3d2612a7)
-
 ---
 
 ## What's in the box
