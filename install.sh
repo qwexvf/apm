@@ -3,7 +3,7 @@ set -e
 
 REPO="qwexvf/apm"
 BIN="apm"
-INSTALL_DIR="${CCPM_INSTALL_DIR:-}"
+INSTALL_DIR="${APM_INSTALL_DIR:-}"
 
 # ── resolve install dir ────────────────────────────────────────────────────────
 if [ -z "$INSTALL_DIR" ]; then
@@ -77,8 +77,11 @@ fi
 
 FILENAME="${BIN}_${TAG}_${GOOS}_${GOARCH}${ARCHIVE_EXT}"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${TAG}/${FILENAME}"
-TMPDIR="$(mktemp -d)"
-ARCHIVE="${TMPDIR}/${FILENAME}"
+TMP_WORKDIR="$(mktemp -d)"
+ARCHIVE="${TMP_WORKDIR}/${FILENAME}"
+
+# ── cleanup on exit (success or failure) ──────────────────────────────────────
+trap 'rm -rf "$TMP_WORKDIR"' EXIT
 
 echo "downloading ${BIN} ${TAG} (${GOOS}/${GOARCH})..."
 
@@ -90,12 +93,12 @@ fi
 
 # ── extract binary ────────────────────────────────────────────────────────────
 if [ "$ARCHIVE_EXT" = ".tar.gz" ]; then
-  tar -xzf "$ARCHIVE" -C "$TMPDIR" "${BIN}${BIN_EXT}"
+  tar -xzf "$ARCHIVE" -C "$TMP_WORKDIR" "${BIN}${BIN_EXT}"
 else
-  unzip -q "$ARCHIVE" "${BIN}${BIN_EXT}" -d "$TMPDIR"
+  unzip -q "$ARCHIVE" "${BIN}${BIN_EXT}" -d "$TMP_WORKDIR"
 fi
 
-EXTRACTED="${TMPDIR}/${BIN}${BIN_EXT}"
+EXTRACTED="${TMP_WORKDIR}/${BIN}${BIN_EXT}"
 chmod +x "$EXTRACTED"
 
 # ── install ───────────────────────────────────────────────────────────────────
@@ -104,10 +107,9 @@ DEST="${INSTALL_DIR}/${BIN}${BIN_EXT}"
 if [ -w "$INSTALL_DIR" ]; then
   mv "$EXTRACTED" "$DEST"
 else
+  echo "note: ${INSTALL_DIR} requires elevated permissions — running sudo"
   sudo mv "$EXTRACTED" "$DEST"
 fi
-
-rm -rf "$TMPDIR"
 
 echo "installed ${BIN} ${TAG} → ${DEST}"
 
