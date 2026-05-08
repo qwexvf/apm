@@ -1,10 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
+	"sync"
 	"text/tabwriter"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -45,7 +49,7 @@ var marketplaceAddCmd = &cobra.Command{
 			return err
 		}
 
-		installLocation := claude.MarketplaceCacheDir(claudeDir) + "/" + id
+		installLocation := filepath.Join(claude.MarketplaceCacheDir(claudeDir), id)
 		km.Add(id, repo, installLocation)
 		if err := km.Save(claudeDir); err != nil {
 			return err
@@ -57,10 +61,12 @@ var marketplaceAddCmd = &cobra.Command{
 			return err
 		}
 
-		// clone it
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+
 		idx := mktpkg.New(id, repo, installLocation)
 		fmt.Printf("cloning %s from github.com/%s...\n", id, repo)
-		if err := idx.EnsureCloned(); err != nil {
+		if err := idx.EnsureCloned(ctx); err != nil {
 			return err
 		}
 
@@ -117,24 +123,91 @@ var marketplaceUpdateCmd = &cobra.Command{
 			return err
 		}
 
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+
+		type result struct {
+			id  string
+			err error
+		}
+
 		mktplaceDir := claude.MarketplaceCacheDir(claudeDir)
+
+		// collect targets
+		type target struct {
+			id        string
+			localPath string
+			repo      string
+		}
+		var targets []target
 		for id, rec := range km {
 			if len(args) > 0 && args[0] != id {
 				continue
 			}
 			localPath := rec.InstallLocation
 			if localPath == "" {
-				localPath = mktplaceDir + "/" + id
+				localPath = filepath.Join(mktplaceDir, id)
 			}
-			idx := mktpkg.New(id, rec.Source.Repo, localPath)
-			fmt.Printf("updating %s...\n", id)
-			if err := idx.EnsureCloned(); err != nil {
-				fmt.Printf("  ✗ %s: %v\n", id, err)
+			targets = append(targets, target{id: id, localPath: localPath, repo: rec.Source.Repo})
+		}
+
+		if len(targets) == 0 {
+			fmt.Println("no marketplaces to update")
+			return km.Save(claudeDir)
+		}
+
+		// spinner while updates run in parallel
+		results := make(chan result, len(targets))
+		var wg sync.WaitGroup
+		for _, t := range targets {
+			wg.Add(1)
+			go func(t target) {
+				defer wg.Done()
+				idx := mktpkg.New(t.id, t.repo, t.localPath)
+				results <- result{id: t.id, err: idx.EnsureCloned(ctx)}
+			}(t)
+		}
+		go func() {
+			wg.Wait()
+			close(results)
+		}()
+
+		spinner := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+		spinDone := make(chan struct{})
+		go func() {
+			i := 0
+			for {
+				select {
+				case <-spinDone:
+					fmt.Print("\r\033[K")
+					return
+				case <-time.After(80 * time.Millisecond):
+					fmt.Printf("\r%s updating marketplaces...", spinner[i%len(spinner)])
+					i++
+				}
+			}
+		}()
+
+		var mu sync.Mutex
+		var collected []result
+		for r := range results {
+			mu.Lock()
+			collected = append(collected, r)
+			mu.Unlock()
+		}
+
+		close(spinDone)
+		time.Sleep(90 * time.Millisecond) // let spinner goroutine clear the line
+
+		for _, r := range collected {
+			if r.err != nil {
+				fmt.Printf("  ✗ %s: %v\n", r.id, r.err)
 			} else {
-				fmt.Printf("  ✓ %s updated\n", id)
+				fmt.Printf("  ✓ %s\n", r.id)
 			}
 		}
-		return nil
+
+		return km.Save(claudeDir)
 	},
 }
 

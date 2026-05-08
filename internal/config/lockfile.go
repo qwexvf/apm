@@ -27,7 +27,7 @@ func NewLock() *Lock {
 	return &Lock{Plugins: []LockedPlugin{}}
 }
 
-// LoadLock reads ccpm.lock from dir.
+// LoadLock reads apm.lock from dir.
 func LoadLock(dir string) (*Lock, error) {
 	path := filepath.Join(dir, LockFile)
 	data, err := os.ReadFile(path)
@@ -44,7 +44,7 @@ func LoadLock(dir string) (*Lock, error) {
 	return l, nil
 }
 
-// Save writes the lock to dir/ccpm.lock atomically.
+// Save writes the lock to dir/apm.lock atomically.
 func (l *Lock) Save(dir string) error {
 	path := filepath.Join(dir, LockFile)
 	tmp := path + ".tmp"
@@ -57,7 +57,10 @@ func (l *Lock) Save(dir string) error {
 		os.Remove(tmp)
 		return err
 	}
-	f.Close()
+	if err := f.Close(); err != nil {
+		os.Remove(tmp)
+		return err
+	}
 	return os.Rename(tmp, path)
 }
 

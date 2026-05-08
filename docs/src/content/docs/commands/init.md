@@ -1,23 +1,23 @@
 ---
-title: ccpm init
-description: Scaffold a ccpm.toml manifest.
+title: apm init
+description: Scaffold a apm.toml manifest.
 sidebar:
   label: init
   order: 5
 ---
 
-Create a `ccpm.toml` manifest file with the official marketplace pre-configured.
+Create a `apm.toml` manifest file with the official marketplace pre-configured.
 
 ## Usage
 
 ```sh
-ccpm init           # user scope → ~/.claude/ccpm.toml
-ccpm init --local   # project scope → ./.claude/ccpm.toml
+apm init           # user scope → ~/.claude/apm.toml
+apm init --local   # project scope → ./.claude/apm.toml
 ```
 
 ## Output
 
-Creates `ccpm.toml`:
+Creates `apm.toml`:
 
 ```toml
 [plugin_manager]
@@ -37,4 +37,4 @@ scope = "user"
 | `--global` | Create in `~/.claude/` (user scope, default) |
 
 > [!NOTE]
-> `ccpm init` fails if `ccpm.toml` already exists at the target path.
+> `apm init` fails if `apm.toml` already exists at the target path.

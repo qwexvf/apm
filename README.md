@@ -16,6 +16,16 @@ On a new machine:
 apm install   # exact same versions, every time
 ```
 
+## Why
+
+I built this after hitting three problems with Claude Code's native plugin system:
+
+**1. No per-project version control.** I work across multiple projects that need different plugin versions. Claude Code installs plugins globally with no way to pin versions per repo. One project upgrading figma would silently break another.
+
+**2. No visibility into what's installed or where.** I had no idea which version of a plugin was active, or where it was installed on disk. `apm info <plugin>` shows you the exact version, commit SHA, and install path. `apm list` shows all plugins and their locked versions at a glance.
+
+**3. Plugins aren't reproducible across machines.** Onboarding a new dev or spinning up CI meant manually reinstalling the same plugins and hoping you picked the right versions. With `apm`, you commit `apm.toml` + `apm.lock` and run `apm install` — same versions, every time, everywhere.
+
 ## Install
 
 ```sh
@@ -37,9 +47,9 @@ go install github.com/qwexvf/apm@latest
 | `apm remove <plugin>` | Remove + uninstall |
 | `apm install` | Deterministic install from lockfile |
 | `apm update [plugin]` | Bump to latest matching constraint |
-| `apm list` | Show installed plugins |
+| `apm list` | Show installed plugins and locked versions |
 | `apm search [query]` | Search marketplace |
-| `apm info <plugin>` | Plugin details |
+| `apm info <plugin>` | Plugin details, version, and install path |
 | `apm lock` | Regenerate lockfile from manifest |
 | `apm sync` | Repair Claude Code state from lockfile |
 | `apm marketplace add/list/update` | Manage marketplaces |

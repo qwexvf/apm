@@ -1,5 +1,5 @@
 ---
-title: ccpm info
+title: apm info
 description: Show plugin details and install status.
 sidebar:
   label: info
@@ -11,13 +11,13 @@ Show detailed information about a plugin: description, author, available version
 ## Usage
 
 ```sh
-ccpm info <name@marketplace>
+apm info <name@marketplace>
 ```
 
 ## Example
 
 ```sh
-ccpm info figma@claude-plugins-official
+apm info figma@claude-plugins-official
 ```
 
 ```

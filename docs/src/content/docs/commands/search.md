@@ -1,5 +1,5 @@
 ---
-title: ccpm search
+title: apm search
 description: Search available plugins across registered marketplaces.
 sidebar:
   label: search
@@ -11,19 +11,19 @@ Search plugins by name or description across all registered marketplaces.
 ## Usage
 
 ```sh
-ccpm search [query]
+apm search [query]
 ```
 
 ## Examples
 
 ```sh
 # list all available plugins
-ccpm search
+apm search
 
 # filter by keyword
-ccpm search figma
-ccpm search lsp
-ccpm search "code review"
+apm search figma
+apm search lsp
+apm search "code review"
 ```
 
 ## Example output
@@ -37,4 +37,4 @@ frontend-design@claude-plugins-official  Production-grade frontend UI gen   Anth
 ```
 
 > [!NOTE]
-> `ccpm search` reads from locally cloned marketplace repos. Run `ccpm marketplace update` first to get the latest plugin listings.
+> `apm search` reads from locally cloned marketplace repos. Run `apm marketplace update` first to get the latest plugin listings.

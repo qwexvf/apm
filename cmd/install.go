@@ -36,7 +36,9 @@ var installCmd = &cobra.Command{
 
 		claudeDir := claude.Dir(m.PluginManager.Scope)
 		gh := fetcher.NewGitHub()
-		ctx := context.Background()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
 
 		reg, err := claude.LoadRegistry(claudeDir)
 		if err != nil {
@@ -47,20 +49,21 @@ var installCmd = &cobra.Command{
 			return err
 		}
 
+		// load marketplaces once, not per plugin
+		km, err := claude.LoadKnownMarketplaces(claudeDir)
+		if err != nil {
+			return fmt.Errorf("load marketplaces: %w", err)
+		}
+
+		lockDirty := false
 		var failed []string
-		for _, locked := range lock.Plugins {
+		for i, locked := range lock.Plugins {
 			pluginName, marketplace, err := config.SplitID(locked.ID)
 			if err != nil {
 				failed = append(failed, locked.ID+": "+err.Error())
 				continue
 			}
 
-			// find repo for this marketplace
-			km, err := claude.LoadKnownMarketplaces(claudeDir)
-			if err != nil {
-				failed = append(failed, locked.ID+": load marketplaces: "+err.Error())
-				continue
-			}
 			repo := km.Repo(marketplace)
 			if repo == "" {
 				if ms, ok := m.Marketplaces[marketplace]; ok {
@@ -78,6 +81,12 @@ var installCmd = &cobra.Command{
 				continue
 			}
 
+			// patch install path back into the lock if it was empty (e.g. written by apm lock)
+			if lock.Plugins[i].InstallPath != result.InstallPath {
+				lock.Plugins[i].InstallPath = result.InstallPath
+				lockDirty = true
+			}
+
 			reg.Upsert(locked.ID, claude.InstallEntry{
 				Scope:        m.PluginManager.Scope,
 				InstallPath:  result.InstallPath,
@@ -89,6 +98,11 @@ var installCmd = &cobra.Command{
 			fmt.Printf("✓ %s @ %s\n", locked.ID, locked.Version)
 		}
 
+		if lockDirty {
+			if err := lock.Save(dir); err != nil {
+				return err
+			}
+		}
 		if err := reg.Save(claudeDir); err != nil {
 			return err
 		}
@@ -104,7 +118,7 @@ var installCmd = &cobra.Command{
 			return fmt.Errorf("%d plugin(s) failed to install", len(failed))
 		}
 
-		fmt.Printf("\n%d plugin(s) installed\n", len(lock.Plugins))
+		fmt.Printf("\n%d plugin(s) installed\n", len(lock.Plugins)-len(failed))
 		return nil
 	},
 }

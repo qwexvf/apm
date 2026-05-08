@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/tabwriter"
 
@@ -51,7 +52,7 @@ var searchCmd = &cobra.Command{
 		for id, rec := range km {
 			localPath := rec.InstallLocation
 			if localPath == "" {
-				localPath = mktplaceDir + "/" + id
+				localPath = filepath.Join(mktplaceDir, id)
 			}
 
 			idx := marketplace.New(id, rec.Source.Repo, localPath)

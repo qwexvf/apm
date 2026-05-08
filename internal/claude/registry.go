@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 )
 
@@ -93,17 +94,7 @@ func (r *Registry) Remove(id, scope string) {
 	}
 }
 
-// Get returns entries for a plugin ID.
+// Get returns a copy of the entries for a plugin ID.
 func (r *Registry) Get(id string) []InstallEntry {
-	return r.Plugins[id]
-}
-
-// UserEntry returns the user-scope entry for a plugin, or nil.
-func (r *Registry) UserEntry(id string) *InstallEntry {
-	for i, e := range r.Plugins[id] {
-		if e.Scope == "user" {
-			return &r.Plugins[id][i]
-		}
-	}
-	return nil
+	return slices.Clone(r.Plugins[id])
 }

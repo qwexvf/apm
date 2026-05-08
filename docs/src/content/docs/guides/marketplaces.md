@@ -1,12 +1,12 @@
 ---
 title: Creating a marketplace
-description: How to publish plugins as a ccpm-compatible marketplace.
+description: How to publish plugins as a apm-compatible marketplace.
 sidebar:
   label: Creating a marketplace
   order: 40
 ---
 
-A marketplace is a public GitHub repo with a specific directory structure. Once registered, users can install your plugins with `ccpm add <plugin>@<your-marketplace>`.
+A marketplace is a public GitHub repo with a specific directory structure. Once registered, users can install your plugins with `apm add <plugin>@<your-marketplace>`.
 
 ## Directory structure
 
@@ -63,24 +63,24 @@ Plugins can include any combination of:
 Users register your marketplace:
 
 ```sh
-ccpm marketplace add my-marketplace github:yourname/my-marketplace
+apm marketplace add my-marketplace github:yourname/my-marketplace
 ```
 
 Then install plugins:
 
 ```sh
-ccpm add my-first-plugin@my-marketplace
+apm add my-first-plugin@my-marketplace
 ```
 
 ## Versioning
 
-ccpm supports semver tags for your plugins. To release version `1.2.0`:
+apm supports semver tags for your plugins. To release version `1.2.0`:
 
 ```sh
 git tag v1.2.0
 git push origin v1.2.0
 ```
 
-Users with constraint `^1.0.0` will get `1.2.0` on the next `ccpm update`.
+Users with constraint `^1.0.0` will get `1.2.0` on the next `apm update`.
 
-If you don't tag releases, ccpm falls back to commit SHAs — users get HEAD of the default branch when they install with `*`.
+If you don't tag releases, apm falls back to commit SHAs — users get HEAD of the default branch when they install with `*`.

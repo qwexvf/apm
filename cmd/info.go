@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -42,7 +43,7 @@ var infoCmd = &cobra.Command{
 		}
 
 		mktplaceDir := claude.MarketplaceCacheDir(claudeDir)
-		localPath := mktplaceDir + "/" + mktplace
+		localPath := filepath.Join(mktplaceDir, mktplace)
 		if rec, ok := km[mktplace]; ok && rec.InstallLocation != "" {
 			localPath = rec.InstallLocation
 		}
@@ -81,7 +82,7 @@ var infoCmd = &cobra.Command{
 		fmt.Printf("version:     %s\n", entry.Version)
 
 		if locked := lock.Get(id); locked != nil {
-			fmt.Printf("locked:      %s  (%s)\n", locked.Version, locked.CommitSHA[:12])
+			fmt.Printf("locked:      %s  (%s)\n", locked.Version, shortSHA(locked.CommitSHA))
 		}
 		if entries := reg.Get(id); len(entries) > 0 {
 			fmt.Printf("installed:   %s\n", entries[0].Version)

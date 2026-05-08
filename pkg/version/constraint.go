@@ -14,11 +14,12 @@ var shaRe = regexp.MustCompile(`^[0-9a-f]{7,40}$`)
 type Kind int
 
 const (
-	KindSemver Kind = iota
-	KindConstraint
-	KindSHA
-	KindBranch
-	KindLatest
+	KindUnknown    Kind = iota // 0 = zero value / unset
+	KindSemver                 // 1
+	KindConstraint             // 2
+	KindSHA                    // 3
+	KindBranch                 // 4
+	KindLatest                 // 5
 )
 
 // Classify returns the kind of a raw version string.
@@ -52,9 +53,7 @@ func MatchConstraint(c, v string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("invalid version %q: %w", v, err)
 	}
-	if _, err := semver.NewVersion(c); err == nil {
-		// exact match
-		ec, _ := semver.NewVersion(c)
+	if ec, err := semver.NewVersion(c); err == nil {
 		return sv.Equal(ec), nil
 	}
 	con, err := semver.NewConstraint(c)

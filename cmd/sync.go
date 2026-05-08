@@ -44,7 +44,11 @@ var syncCmd = &cobra.Command{
 		}
 
 		for _, locked := range lock.Plugins {
-			if _, err := os.Stat(locked.InstallPath); os.IsNotExist(err) {
+			if locked.InstallPath == "" {
+				fmt.Printf("  warning: %s install path missing — run: apm install\n", locked.ID)
+				continue
+			}
+			if _, err := os.Stat(locked.InstallPath); err != nil {
 				fmt.Printf("  warning: %s install path missing — run: apm install\n", locked.ID)
 				continue
 			}

@@ -1,12 +1,12 @@
 ---
 title: Configuration reference
-description: All ccpm.toml fields and their defaults.
+description: All apm.toml fields and their defaults.
 sidebar:
   label: Config reference
   order: 10
 ---
 
-## `ccpm.toml` fields
+## `apm.toml` fields
 
 ### `[plugin_manager]`
 
@@ -46,9 +46,9 @@ Keys are plugin IDs (`name@marketplace`). Values are [version constraints](/guid
 |----------|-------------|
 | `GITHUB_TOKEN` | Personal access token for GitHub API. Raises rate limit from 60 to 5,000 req/hour. Read scope only — `public_repo` is sufficient. |
 
-## Claude Code files managed by ccpm
+## Claude Code files managed by apm
 
-ccpm reads and writes these files in your Claude Code config directory:
+apm reads and writes these files in your Claude Code config directory:
 
 | File | Description |
 |------|-------------|
@@ -58,4 +58,4 @@ ccpm reads and writes these files in your Claude Code config directory:
 | `plugins/cache/<marketplace>/<plugin>/<version>/` | Extracted plugin files |
 | `plugins/marketplaces/<marketplace>/` | Cloned marketplace git repos |
 
-ccpm uses atomic writes (write to `.tmp`, then rename) when modifying JSON files and preserves all unrelated keys in `settings.json`.
+apm uses atomic writes (write to `.tmp`, then rename) when modifying JSON files and preserves all unrelated keys in `settings.json`.

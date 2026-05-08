@@ -7,8 +7,12 @@ import (
 	"strings"
 
 	"github.com/qwexvf/apm/internal/claude"
-	"github.com/qwexvf/apm/internal/fetcher"
 )
+
+// Downloader fetches and extracts plugin archives.
+type Downloader interface {
+	DownloadTarball(ctx context.Context, owner, repo, ref, destDir string) (string, error)
+}
 
 // Result is returned after a successful install.
 type Result struct {
@@ -20,7 +24,7 @@ type Result struct {
 // If the installPath already exists and integrity matches the locked value, it is a no-op.
 func Install(
 	ctx context.Context,
-	gh *fetcher.GitHub,
+	gh Downloader,
 	claudeDir string,
 	marketplaceID, pluginName, repo, ref string,
 ) (*Result, error) {

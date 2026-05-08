@@ -1,17 +1,17 @@
 ---
-title: ccpm sync
-description: Repair Claude Code state from ccpm.lock without re-downloading.
+title: apm sync
+description: Repair Claude Code state from apm.lock without re-downloading.
 sidebar:
   label: sync
   order: 90
 ---
 
-Write plugin entries into Claude Code's `installed_plugins.json` and `settings.json` based on `ccpm.lock`, without downloading anything.
+Write plugin entries into Claude Code's `installed_plugins.json` and `settings.json` based on `apm.lock`, without downloading anything.
 
 ## Usage
 
 ```sh
-ccpm sync
+apm sync
 ```
 
 ## When to use
@@ -22,12 +22,12 @@ ccpm sync
 
 ## What it does
 
-For each entry in `ccpm.lock`:
+For each entry in `apm.lock`:
 1. Checks that the `install_path` exists on disk
 2. Writes the entry to `installed_plugins.json`
 3. Sets `enabledPlugins[id] = true` in `settings.json`
 
-If an `install_path` is missing, it prints a warning and skips that plugin — run `ccpm install` to re-download those.
+If an `install_path` is missing, it prints a warning and skips that plugin — run `apm install` to re-download those.
 
 > [!TIP]
-> `ccpm sync` is a repair tool, not a substitute for `ccpm install`. Use `install` when you need the files; use `sync` when the files exist but Claude Code doesn't know about them.
+> `apm sync` is a repair tool, not a substitute for `apm install`. Use `install` when you need the files; use `sync` when the files exist but Claude Code doesn't know about them.

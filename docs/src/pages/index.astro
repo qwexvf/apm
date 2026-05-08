@@ -7,7 +7,7 @@ const features = [
   {
     icon: "🔒",
     title: "Lockfile-first",
-    body: "ccpm.lock pins every plugin to an exact commit SHA. Reinstall on any machine — same code, every time.",
+    body: "apm.lock pins every plugin to an exact commit SHA. Reinstall on any machine — same code, every time.",
   },
   {
     icon: "⚙",
@@ -22,13 +22,13 @@ const features = [
   {
     icon: "↺",
     title: "State repair",
-    body: "ccpm sync fixes Claude Code's registry from the lockfile — no re-download needed.",
+    body: "apm sync fixes Claude Code's registry from the lockfile — no re-download needed.",
   },
 ];
 ---
 
 <BaseLayout
-  title="ccpm — Claude Code Plugin Manager"
+  title="apm — Claude Code Plugin Manager"
   description="Lockfile-based plugin manager for Claude Code. Reproducible installs, semver constraints, custom marketplaces."
 >
   <!-- Hero -->
@@ -52,13 +52,13 @@ const features = [
 
         <p class="mt-6 max-w-[48ch] text-[15px] leading-relaxed text-[var(--color-fg)]">
           Claude Code's built-in plugin system has no lockfile, no version constraints, no reproducibility.
-          <strong class="text-[var(--color-fg-strong)]">ccpm fixes that.</strong>
+          <strong class="text-[var(--color-fg-strong)]">apm fixes that.</strong>
         </p>
 
         <!-- Install command -->
         <div class="mt-8 inline-flex items-center gap-3 rounded-sm border border-[var(--color-rule-strong)] bg-[var(--color-bg-elev)] px-4 py-3 font-mono text-[13px]">
           <span class="text-[var(--color-signal)]">$</span>
-          <span class="text-[var(--color-fg-strong)]">go install github.com/qwexvf/ccpm@latest</span>
+          <span class="text-[var(--color-fg-strong)]">go install github.com/qwexvf/apm@latest</span>
         </div>
 
         <!-- CTA buttons -->
@@ -73,7 +73,7 @@ const features = [
             </svg>
           </a>
           <a
-            href="https://github.com/qwexvf/ccpm"
+            href="https://github.com/qwexvf/apm"
             class="inline-flex items-center gap-2 rounded-sm border border-[var(--color-rule-strong)] bg-transparent px-5 py-2.5 font-display font-600 text-[13px] text-[var(--color-fg)] transition-colors hover:border-[var(--color-signal)]/60 hover:text-[var(--color-signal)]"
             target="_blank"
             rel="noopener"
@@ -100,7 +100,7 @@ const features = [
           <div class="terminal-line" style="animation-delay: 0ms">
             <span class="text-[var(--color-success)]">~</span>
             <span class="text-[var(--color-fg-faint)]"> $ </span>
-            <span class="text-[var(--color-fg-strong)]">ccpm add figma@claude-plugins-official@^2.1.0</span>
+            <span class="text-[var(--color-fg-strong)]">apm add figma@claude-plugins-official@^2.1.0</span>
           </div>
           <div class="terminal-line" style="animation-delay: 400ms">
             <span class="text-[var(--color-fg-mute)]">resolving figma@claude-plugins-official...</span>
@@ -122,7 +122,7 @@ const features = [
           <div class="terminal-line" style="animation-delay: 2000ms">
             <span class="text-[var(--color-success)]">~</span>
             <span class="text-[var(--color-fg-faint)]"> $ </span>
-            <span class="text-[var(--color-fg-strong)]">ccpm add caveman@caveman</span>
+            <span class="text-[var(--color-fg-strong)]">apm add caveman@caveman</span>
           </div>
           <div class="terminal-line" style="animation-delay: 2400ms">
             <span class="text-[var(--color-success)]">✓ </span>
@@ -133,7 +133,7 @@ const features = [
           <div class="terminal-line" style="animation-delay: 2800ms">
             <span class="text-[var(--color-success)]">~</span>
             <span class="text-[var(--color-fg-faint)]"> $ </span>
-            <span class="text-[var(--color-fg-strong)]">git add ccpm.toml ccpm.lock</span>
+            <span class="text-[var(--color-fg-strong)]">git add apm.toml apm.lock</span>
           </div>
           <div class="terminal-line" style="animation-delay: 3200ms">
             <span class="text-[var(--color-success)]">~</span>
@@ -168,7 +168,7 @@ const features = [
   <!-- Features grid -->
   <section class="mx-auto max-w-[82rem] px-5 py-20">
     <div class="mb-10 flex items-center gap-3">
-      <span class="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--color-fg-faint)]">Why ccpm</span>
+      <span class="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--color-fg-faint)]">Why apm</span>
       <div class="flex-1 h-px bg-[var(--color-rule)]"></div>
     </div>
 
@@ -207,8 +207,8 @@ const features = [
             Init. Add. Commit.<br/>Done.
           </h2>
           <p class="text-[14px] text-[var(--color-fg-mute)] leading-relaxed mb-6">
-            Declare your plugins in <code class="font-mono text-[var(--color-signal)] text-[13px]">ccpm.toml</code>,
-            pin exact versions in <code class="font-mono text-[var(--color-signal)] text-[13px]">ccpm.lock</code>,
+            Declare your plugins in <code class="font-mono text-[var(--color-signal)] text-[13px]">apm.toml</code>,
+            pin exact versions in <code class="font-mono text-[var(--color-signal)] text-[13px]">apm.lock</code>,
             commit both. Any machine, same plugins.
           </p>
           <a
@@ -222,10 +222,10 @@ const features = [
           </a>
         </div>
 
-        <!-- ccpm.toml preview -->
+        <!-- apm.toml preview -->
         <div class="rounded-sm border border-[var(--color-rule-strong)] bg-[var(--color-bg-code)] overflow-hidden">
           <div class="flex items-center gap-2 px-4 py-2.5 border-b border-[var(--color-rule)] bg-[var(--color-bg-elev)]">
-            <span class="font-mono text-[11px] text-[var(--color-signal)]">ccpm.toml</span>
+            <span class="font-mono text-[11px] text-[var(--color-signal)]">apm.toml</span>
           </div>
           <pre class="p-5 font-mono text-[12px] leading-[1.75] overflow-x-auto !m-0 !border-0 !rounded-none !pt-5 before:hidden"><code><span class="text-[var(--color-fg-faint)]">[plugin_manager]</span>
 <span class="text-[var(--color-fg-mute)]">scope</span> <span class="text-[var(--color-fg-faint)]">=</span> <span class="text-[var(--color-success)]">"user"</span>
@@ -248,12 +248,12 @@ const features = [
 
     <div class="border border-[var(--color-rule)] rounded-sm overflow-hidden">
       {[
-        { cmd: "ccpm init", desc: "scaffold ccpm.toml", href: "commands/init/" },
-        { cmd: "ccpm add <plugin>", desc: "add + install + lock", href: "commands/add/" },
-        { cmd: "ccpm install", desc: "deterministic install from lockfile", href: "commands/install/" },
-        { cmd: "ccpm update", desc: "bump versions within constraints", href: "commands/update/" },
-        { cmd: "ccpm list", desc: "show installed plugins", href: "commands/list/" },
-        { cmd: "ccpm sync", desc: "repair Claude Code state from lockfile", href: "commands/sync/" },
+        { cmd: "apm init", desc: "scaffold apm.toml", href: "commands/init/" },
+        { cmd: "apm add <plugin>", desc: "add + install + lock", href: "commands/add/" },
+        { cmd: "apm install", desc: "deterministic install from lockfile", href: "commands/install/" },
+        { cmd: "apm update", desc: "bump versions within constraints", href: "commands/update/" },
+        { cmd: "apm list", desc: "show installed plugins", href: "commands/list/" },
+        { cmd: "apm sync", desc: "repair Claude Code state from lockfile", href: "commands/sync/" },
       ].map((c, i) => (
         <a
           href={base + c.href}

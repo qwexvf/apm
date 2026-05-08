@@ -81,9 +81,6 @@ func (s *Settings) Save(claudeDir string) error {
 
 // EnablePlugin sets the plugin enabled state.
 func (s *Settings) EnablePlugin(id string, enabled bool) {
-	if s.EnabledPlugins == nil {
-		s.EnabledPlugins = map[string]bool{}
-	}
 	s.EnabledPlugins[id] = enabled
 }
 

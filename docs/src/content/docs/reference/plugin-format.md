@@ -1,12 +1,12 @@
 ---
 title: Plugin format
-description: The Claude Code plugin directory structure that ccpm installs.
+description: The Claude Code plugin directory structure that apm installs.
 sidebar:
   label: Plugin format
   order: 30
 ---
 
-ccpm installs plugins from GitHub repos. A valid Claude Code plugin is any repo (or directory within a marketplace) that contains a `.claude-plugin/plugin.json` file.
+apm installs plugins from GitHub repos. A valid Claude Code plugin is any repo (or directory within a marketplace) that contains a `.claude-plugin/plugin.json` file.
 
 ## Minimal plugin
 
@@ -52,7 +52,7 @@ my-plugin/
 | `name` | string | yes | Plugin identifier |
 | `description` | string | no | Short description |
 | `author` | string | no | Author name |
-| `version` | string | no | Version (ccpm uses git tags preferentially) |
+| `version` | string | no | Version (apm uses git tags preferentially) |
 
 ## hooks/package.json
 
@@ -66,7 +66,7 @@ Without this, Node.js treats `.js` files as ESM and `require()` calls will fail.
 
 ## Install path
 
-ccpm installs plugins to:
+apm installs plugins to:
 
 ```
 ~/.claude/plugins/cache/<marketplace-id>/<plugin-name>/<version>/

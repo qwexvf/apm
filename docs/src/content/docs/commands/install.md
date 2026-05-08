@@ -1,22 +1,22 @@
 ---
-title: ccpm install
-description: Install all plugins from ccpm.lock deterministically.
+title: apm install
+description: Install all plugins from apm.lock deterministically.
 sidebar:
   label: install
   order: 20
 ---
 
-Install every plugin listed in `ccpm.lock` at the exact pinned version. Equivalent to `npm ci` — no resolution, no surprises.
+Install every plugin listed in `apm.lock` at the exact pinned version. Equivalent to `npm ci` — no resolution, no surprises.
 
 ## Usage
 
 ```sh
-ccpm install
+apm install
 ```
 
 ## What it does
 
-1. Reads `ccpm.lock`
+1. Reads `apm.lock`
 2. For each plugin, checks if the install path already exists
 3. Skips plugins that are already cached (by path)
 4. Downloads missing plugins from GitHub
@@ -24,7 +24,7 @@ ccpm install
 
 ## When to use
 
-- After cloning a repo that has `ccpm.toml` + `ccpm.lock`
+- After cloning a repo that has `apm.toml` + `apm.lock`
 - On a new machine to reproduce the exact plugin state your team uses
 - In CI to verify plugins install cleanly
 
@@ -39,8 +39,8 @@ ccpm install
 
 | Flag | Description |
 |------|-------------|
-| `--global` | Read from `~/.claude/ccpm.lock` |
-| `--local` | Read from `./.claude/ccpm.lock` |
+| `--global` | Read from `~/.claude/apm.lock` |
+| `--local` | Read from `./.claude/apm.lock` |
 
 > [!NOTE]
-> `ccpm install` never modifies `ccpm.toml` or `ccpm.lock`. Use `ccpm add` or `ccpm update` to change versions.
+> `apm install` never modifies `apm.toml` or `apm.lock`. Use `apm add` or `apm update` to change versions.

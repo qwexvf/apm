@@ -56,7 +56,8 @@ var addCmd = &cobra.Command{
 			return fmt.Errorf("unknown marketplace %q — register it with: apm marketplace add %s github:org/repo", marketplace, marketplace)
 		}
 
-		ctx := context.Background()
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
 		gh := fetcher.NewGitHub()
 
 		fmt.Printf("resolving %s...\n", id)
@@ -64,14 +65,40 @@ var addCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		fmt.Printf("resolved: %s @ %s (%s)\n", id, res.Version, res.CommitSHA[:12])
+		fmt.Printf("resolved: %s @ %s (%s)\n", id, res.Version, shortSHA(res.CommitSHA))
 
 		result, err := installer.Install(ctx, gh, claudeDir, marketplace, pluginName, repo, res.Version)
 		if err != nil {
 			return err
 		}
 
-		// update registry
+		// preserve existing integrity if installer skipped a cached directory
+		integrity := result.Integrity
+		if integrity == "" {
+			if existing := lock.Get(id); existing != nil {
+				integrity = existing.Integrity
+			}
+		}
+
+		// manifest and lockfile first — runtime state can be rebuilt with apm sync
+		m.AddPlugin(id, constraint)
+		if err := m.Save(dir); err != nil {
+			return err
+		}
+
+		lock.Upsert(config.LockedPlugin{
+			ID:          id,
+			Version:     res.Version,
+			CommitSHA:   res.CommitSHA,
+			ResolvedURL: "https://github.com/" + repo,
+			InstallPath: result.InstallPath,
+			Integrity:   integrity,
+		})
+		if err := lock.Save(dir); err != nil {
+			return err
+		}
+
+		// runtime state — can be rebuilt with apm sync
 		reg, err := claude.LoadRegistry(claudeDir)
 		if err != nil {
 			return err
@@ -87,32 +114,12 @@ var addCmd = &cobra.Command{
 			return err
 		}
 
-		// update settings
 		settings, err := claude.LoadSettings(claudeDir)
 		if err != nil {
 			return err
 		}
 		settings.EnablePlugin(id, true)
 		if err := settings.Save(claudeDir); err != nil {
-			return err
-		}
-
-		// update manifest
-		m.AddPlugin(id, constraint)
-		if err := m.Save(dir); err != nil {
-			return err
-		}
-
-		// update lockfile
-		lock.Upsert(config.LockedPlugin{
-			ID:          id,
-			Version:     res.Version,
-			CommitSHA:   res.CommitSHA,
-			ResolvedURL: "https://github.com/" + repo,
-			InstallPath: result.InstallPath,
-			Integrity:   result.Integrity,
-		})
-		if err := lock.Save(dir); err != nil {
 			return err
 		}
 

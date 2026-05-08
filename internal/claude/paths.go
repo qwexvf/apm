@@ -1,6 +1,7 @@
 package claude
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -18,6 +19,10 @@ func Dir(scope string) string {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		home = os.Getenv("HOME")
+	}
+	if home == "" {
+		fmt.Fprintln(os.Stderr, "fatal: cannot determine home directory (HOME not set)")
+		os.Exit(1)
 	}
 	return filepath.Join(home, ".claude")
 }

@@ -14,10 +14,10 @@ const { title, description, currentSlug, toc = [] } = Astro.props;
 const groups = await buildNav();
 const { prev, next } = await findAdjacent(currentSlug);
 const base = import.meta.env.BASE_URL.replace(/\/$/, "") + "/";
-const editBase = "https://github.com/qwexvf/ccpm/edit/main/docs/src/content/docs/";
+const editBase = "https://github.com/qwexvf/apm/edit/main/docs/src/content/docs/";
 ---
 
-<BaseLayout title={`${title} — ccpm`} description={description} currentSlug={currentSlug}>
+<BaseLayout title={`${title} — apm`} description={description} currentSlug={currentSlug}>
   <div class="mx-auto max-w-[82rem] px-5">
     <div class="flex gap-8">
       <Sidebar groups={groups} currentSlug={currentSlug} />
@@ -27,7 +27,7 @@ const editBase = "https://github.com/qwexvf/ccpm/edit/main/docs/src/content/docs
           <!-- Page header -->
           <header class="mb-10">
             <div class="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-fg-faint)]">
-              ccpm / {currentSlug.replace(/\//g, " / ")}
+              apm / {currentSlug.replace(/\//g, " / ")}
             </div>
             <h1 class="font-display text-[2rem] font-800 leading-tight tracking-tight text-[var(--color-fg-strong)] md:text-[2.5rem]">
               {title}

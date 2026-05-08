@@ -1,18 +1,18 @@
 ---
 title: GitHub token setup
-description: How to create and configure a GitHub token for ccpm.
+description: How to create and configure a GitHub token for apm.
 sidebar:
   label: GitHub token
   order: 20
 ---
 
-ccpm uses the GitHub API to resolve plugin versions and download archives. Without a token, requests are rate-limited to **60/hour** by IP. With a token: **5,000/hour**.
+apm uses the GitHub API to resolve plugin versions and download archives. Without a token, requests are rate-limited to **60/hour** by IP. With a token: **5,000/hour**.
 
 ## Create a token
 
 1. Go to [github.com/settings/tokens](https://github.com/settings/tokens)
 2. Click **Generate new token (classic)**
-3. Give it a name — e.g. `ccpm`
+3. Give it a name — e.g. `apm`
 4. Select scopes: **no scopes needed** for public repos (the default read access is sufficient)
 5. Click **Generate token**
 6. Copy the token (shown once)
@@ -49,4 +49,4 @@ If you prefer [fine-grained tokens](https://github.com/settings/tokens?type=beta
 No other permissions needed.
 
 > [!NOTE]
-> ccpm never writes to GitHub. The token is only used for reading tags, commit SHAs, and downloading tarballs.
+> apm never writes to GitHub. The token is only used for reading tags, commit SHAs, and downloading tarballs.

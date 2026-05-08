@@ -3,13 +3,14 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	globalScope bool
-	localScope  bool
+	globalScope  bool
+	localScope   bool
 	buildVersion = "dev"
 	buildCommit  = "none"
 	buildDate    = "unknown"
@@ -25,8 +26,8 @@ var rootCmd = &cobra.Command{
 // SetVersion is called from main with ldflags-injected values.
 func SetVersion(version, commit, date string) {
 	buildVersion = version
-	buildCommit  = commit
-	buildDate    = date
+	buildCommit = commit
+	buildDate = date
 	rootCmd.Version = version
 }
 
@@ -56,8 +57,12 @@ func init() {
 	)
 }
 
-// resolveScope returns "user" or "local" based on flags and cwd.
+// resolveScope returns "user" or "local" based on flags.
 func resolveScope() string {
+	if localScope && globalScope {
+		fmt.Fprintln(os.Stderr, "error: --local and --global are mutually exclusive")
+		os.Exit(1)
+	}
 	if localScope {
 		return "local"
 	}
@@ -77,8 +82,19 @@ func manifestDir() string {
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "warning: cannot determine home directory:", err)
 		home = os.Getenv("HOME")
 	}
-	return home + "/.claude"
+	if home == "" {
+		fmt.Fprintln(os.Stderr, "fatal: cannot determine home directory (HOME not set)")
+		os.Exit(1)
+	}
+	return filepath.Join(home, ".claude")
+}
+
+// shortSHA returns the first 12 chars of a SHA, or the whole string if shorter.
+func shortSHA(sha string) string {
+	if len(sha) >= 12 {
+		return sha[:12]
+	}
+	return sha
 }

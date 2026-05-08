@@ -35,7 +35,9 @@ var updateCmd = &cobra.Command{
 
 		claudeDir := claude.Dir(m.PluginManager.Scope)
 		gh := fetcher.NewGitHub()
-		ctx := context.Background()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
 
 		// filter to requested plugins or all
 		toUpdate := m.Plugins
@@ -144,6 +146,7 @@ var updateCmd = &cobra.Command{
 			return err
 		}
 
+		var failed []string
 		for _, u := range updates {
 			pluginName, marketplace, err := config.SplitID(u.id)
 			if err != nil {
@@ -153,7 +156,16 @@ var updateCmd = &cobra.Command{
 			result, err := installer.Install(ctx, gh, claudeDir, marketplace, pluginName, u.repo, u.newVersion)
 			if err != nil {
 				fmt.Printf("  ✗ %s: %v\n", u.id, err)
+				failed = append(failed, u.id+": "+err.Error())
 				continue
+			}
+
+			// preserve existing integrity if installer skipped a cached directory
+			integrity := result.Integrity
+			if integrity == "" {
+				if existing := lock.Get(u.id); existing != nil {
+					integrity = existing.Integrity
+				}
 			}
 
 			reg.Upsert(u.id, claude.InstallEntry{
@@ -170,18 +182,29 @@ var updateCmd = &cobra.Command{
 				CommitSHA:   u.commitSHA,
 				ResolvedURL: "https://github.com/" + u.repo,
 				InstallPath: result.InstallPath,
-				Integrity:   result.Integrity,
+				Integrity:   integrity,
 			})
 			fmt.Printf("  ✓ %s @ %s\n", u.id, u.newVersion)
 		}
 
+		// lockfile first — runtime state can be rebuilt with apm sync
+		if err := lock.Save(dir); err != nil {
+			return err
+		}
 		if err := reg.Save(claudeDir); err != nil {
 			return err
 		}
 		if err := settings.Save(claudeDir); err != nil {
 			return err
 		}
-		return lock.Save(dir)
+		if len(failed) > 0 {
+			fmt.Println("\nfailed:")
+			for _, f := range failed {
+				fmt.Println("  ✗", f)
+			}
+			return fmt.Errorf("%d plugin(s) failed to update", len(failed))
+		}
+		return nil
 	},
 }
 

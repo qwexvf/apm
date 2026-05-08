@@ -155,6 +155,14 @@ func extractTarGz(r io.Reader, destDir string) (string, error) {
 				return "", err
 			}
 		case tar.TypeSymlink:
+			// reject absolute symlink targets and any that escape destDir
+			if filepath.IsAbs(hdr.Linkname) {
+				continue
+			}
+			linkTarget := filepath.Join(filepath.Dir(target), hdr.Linkname)
+			if !strings.HasPrefix(filepath.Clean(linkTarget), filepath.Clean(destDir)+string(os.PathSeparator)) {
+				continue
+			}
 			os.Remove(target)
 			if err := os.Symlink(hdr.Linkname, target); err != nil {
 				return "", err

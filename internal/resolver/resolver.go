@@ -5,9 +5,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/qwexvf/apm/internal/fetcher"
 	"github.com/qwexvf/apm/pkg/version"
 )
+
+// TagResolver resolves git refs and enumerates tags for a repository.
+type TagResolver interface {
+	ListTags(ctx context.Context, owner, repo string) ([]string, error)
+	ResolveRef(ctx context.Context, owner, repo, ref string) (string, error)
+	LatestCommitSHA(ctx context.Context, owner, repo string) (string, error)
+}
 
 // Result is the resolved concrete version for a plugin.
 type Result struct {
@@ -17,7 +23,7 @@ type Result struct {
 
 // Resolve resolves a version constraint to a concrete version + commit SHA.
 // repo is "owner/repo", constraint is e.g. "^2.1.0", "*", "latest", "abc123", "main".
-func Resolve(ctx context.Context, gh *fetcher.GitHub, repo, constraint string) (*Result, error) {
+func Resolve(ctx context.Context, gh TagResolver, repo, constraint string) (*Result, error) {
 	owner, name, ok := strings.Cut(repo, "/")
 	if !ok {
 		return nil, fmt.Errorf("invalid repo %q: expected owner/repo", repo)
@@ -75,7 +81,11 @@ func Resolve(ctx context.Context, gh *fetcher.GitHub, repo, constraint string) (
 		if err != nil {
 			return nil, err
 		}
-		return &Result{Version: sha[:12], CommitSHA: sha}, nil
+		short := sha
+		if len(sha) >= 12 {
+			short = sha[:12]
+		}
+		return &Result{Version: short, CommitSHA: sha}, nil
 
 	case version.KindSemver, version.KindConstraint:
 		tags, err := gh.ListTags(ctx, owner, name)

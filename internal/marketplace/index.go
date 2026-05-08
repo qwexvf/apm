@@ -1,6 +1,7 @@
 package marketplace
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 )
+
 
 // PluginMeta is the minimal plugin.json content under .claude-plugin/.
 type PluginMeta struct {
@@ -28,9 +30,9 @@ type ListEntry struct {
 
 // Index manages a local git clone of a marketplace repo.
 type Index struct {
-	ID          string // e.g. "claude-plugins-official"
-	Repo        string // e.g. "anthropics/claude-plugins-official"
-	LocalPath   string // e.g. ~/.claude/plugins/marketplaces/claude-plugins-official
+	ID        string // e.g. "claude-plugins-official"
+	Repo      string // e.g. "anthropics/claude-plugins-official"
+	LocalPath string // e.g. ~/.claude/plugins/marketplaces/claude-plugins-official
 }
 
 // New creates an Index for a marketplace.
@@ -39,29 +41,34 @@ func New(id, repo, localPath string) *Index {
 }
 
 // EnsureCloned clones the marketplace repo if not present, or fast-forwards.
-func (idx *Index) EnsureCloned() error {
+func (idx *Index) EnsureCloned(ctx context.Context) error {
 	if _, err := os.Stat(filepath.Join(idx.LocalPath, ".git")); err == nil {
-		return idx.Pull()
+		return idx.Pull(ctx)
+	}
+	// directory exists but has no .git — stale or partial; remove and re-clone
+	if _, err := os.Stat(idx.LocalPath); err == nil {
+		if err := os.RemoveAll(idx.LocalPath); err != nil {
+			return fmt.Errorf("remove stale dir %s: %w", idx.LocalPath, err)
+		}
 	}
 	if err := os.MkdirAll(filepath.Dir(idx.LocalPath), 0755); err != nil {
 		return err
 	}
 	url := "https://github.com/" + idx.Repo + ".git"
-	cmd := exec.Command("git", "clone", "--depth=1", url, idx.LocalPath)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("clone %s: %w", url, err)
+	cmd := exec.CommandContext(ctx, "git", "clone", "--depth=1", url, idx.LocalPath)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("clone %s: %s", url, strings.TrimSpace(string(out)))
 	}
 	return nil
 }
 
 // Pull fast-forwards an existing clone.
-func (idx *Index) Pull() error {
-	cmd := exec.Command("git", "-C", idx.LocalPath, "pull", "--ff-only")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+func (idx *Index) Pull(ctx context.Context) error {
+	cmd := exec.CommandContext(ctx, "git", "-C", idx.LocalPath, "pull", "--ff-only")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("pull %s: %s", idx.Repo, strings.TrimSpace(string(out)))
+	}
+	return nil
 }
 
 // ListPlugins returns all plugins in the marketplace.

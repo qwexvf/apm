@@ -1,12 +1,12 @@
 ---
-title: ccpm marketplace
+title: apm marketplace
 description: Register and manage plugin marketplaces.
 sidebar:
   label: marketplace
   order: 100
 ---
 
-Manage the list of plugin marketplaces ccpm knows about.
+Manage the list of plugin marketplaces apm knows about.
 
 ## Subcommands
 
@@ -15,18 +15,18 @@ Manage the list of plugin marketplaces ccpm knows about.
 Register a new marketplace and clone its repo locally.
 
 ```sh
-ccpm marketplace add <id> <github:owner/repo>
+apm marketplace add <id> <github:owner/repo>
 ```
 
 **Example:**
 
 ```sh
-ccpm marketplace add caveman github:JuliusBrussee/caveman
+apm marketplace add caveman github:JuliusBrussee/caveman
 ```
 
 This:
 1. Adds the marketplace to `known_marketplaces.json`
-2. Adds it to `ccpm.toml` `[marketplaces]`
+2. Adds it to `apm.toml` `[marketplaces]`
 3. Clones the repo to `~/.claude/plugins/marketplaces/caveman/`
 
 ### `marketplace list`
@@ -34,7 +34,7 @@ This:
 List all registered marketplaces.
 
 ```sh
-ccpm marketplace list
+apm marketplace list
 ```
 
 ```
@@ -48,12 +48,12 @@ caveman                   github.com/JuliusBrussee/caveman               ~/.clau
 Pull the latest plugin listings from all registered marketplaces.
 
 ```sh
-ccpm marketplace update           # update all
-ccpm marketplace update caveman   # update one
+apm marketplace update           # update all
+apm marketplace update caveman   # update one
 ```
 
 > [!NOTE]
-> Run this periodically to see new plugins in `ccpm search`.
+> Run this periodically to see new plugins in `apm search`.
 
 ## How marketplaces work
 

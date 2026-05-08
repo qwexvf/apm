@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -33,8 +34,12 @@ var lockCmd = &cobra.Command{
 		}
 
 		gh := fetcher.NewGitHub()
-		ctx := context.Background()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
+
 		lock := config.NewLock()
+		scope := m.PluginManager.Scope
 
 		for id, constraint := range m.Plugins {
 			_, mktplace, err := config.SplitID(id)
@@ -58,10 +63,13 @@ var lockCmd = &cobra.Command{
 				return err
 			}
 
-			// use existing install path if available
-			installPath := ""
-			if entry := reg.UserEntry(id); entry != nil {
-				installPath = entry.InstallPath
+			// use existing install path for the manifest's scope
+			var installPath string
+			for _, e := range reg.Get(id) {
+				if e.Scope == scope {
+					installPath = e.InstallPath
+					break
+				}
 			}
 
 			lock.Upsert(config.LockedPlugin{

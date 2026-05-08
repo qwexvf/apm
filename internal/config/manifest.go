@@ -34,7 +34,7 @@ func NewManifest() *Manifest {
 	}
 }
 
-// LoadManifest reads ccpm.toml from dir.
+// LoadManifest reads apm.toml from dir.
 func LoadManifest(dir string) (*Manifest, error) {
 	path := filepath.Join(dir, ManifestFile)
 	data, err := os.ReadFile(path)
@@ -48,18 +48,24 @@ func LoadManifest(dir string) (*Manifest, error) {
 	return m, nil
 }
 
-// Save writes the manifest to dir/apm.toml.
+// Save writes the manifest to dir/apm.toml atomically.
 func (m *Manifest) Save(dir string) error {
 	path := filepath.Join(dir, ManifestFile)
-	f, err := os.Create(path)
+	tmp := path + ".tmp"
+	f, err := os.Create(tmp)
 	if err != nil {
 		return err
 	}
 	if err := toml.NewEncoder(f).Encode(m); err != nil {
 		f.Close()
+		os.Remove(tmp)
 		return err
 	}
-	return f.Close()
+	if err := f.Close(); err != nil {
+		os.Remove(tmp)
+		return err
+	}
+	return os.Rename(tmp, path)
 }
 
 // AddPlugin adds or updates a plugin entry in the manifest.
@@ -90,8 +96,20 @@ func ParsePluginArg(arg string) (name, marketplace, constraint string, err error
 	case 1:
 		return "", "", "", fmt.Errorf("missing marketplace: use name@marketplace format")
 	case 2:
+		if parts[0] == "" {
+			return "", "", "", fmt.Errorf("missing plugin name in %q", arg)
+		}
+		if parts[1] == "" {
+			return "", "", "", fmt.Errorf("missing marketplace in %q", arg)
+		}
 		return parts[0], parts[1], "*", nil
 	case 3:
+		if parts[0] == "" {
+			return "", "", "", fmt.Errorf("missing plugin name in %q", arg)
+		}
+		if parts[1] == "" {
+			return "", "", "", fmt.Errorf("missing marketplace in %q", arg)
+		}
 		return parts[0], parts[1], parts[2], nil
 	}
 	return "", "", "", fmt.Errorf("invalid plugin argument: %q", arg)

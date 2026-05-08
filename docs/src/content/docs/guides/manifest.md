@@ -1,19 +1,19 @@
 ---
 title: Manifest format
-description: Reference for ccpm.toml — the declarative plugin manifest.
+description: Reference for apm.toml — the declarative plugin manifest.
 sidebar:
-  label: Manifest (ccpm.toml)
+  label: Manifest (apm.toml)
   order: 10
 ---
 
-`ccpm.toml` is the declarative manifest that lists which plugins your environment needs and at what versions. It is committed to git and shared across machines.
+`apm.toml` is the declarative manifest that lists which plugins your environment needs and at what versions. It is committed to git and shared across machines.
 
 ## File location
 
 | Scope | Path |
 |-------|------|
-| User (default) | `~/.claude/ccpm.toml` |
-| Project | `./.claude/ccpm.toml` |
+| User (default) | `~/.claude/apm.toml` |
+| Project | `./.claude/apm.toml` |
 
 ## Full example
 

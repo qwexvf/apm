@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const marketplaceFile = "plugins/known_marketplaces.json"
@@ -15,6 +16,7 @@ type KnownMarketplaces map[string]MarketplaceRecord
 type MarketplaceRecord struct {
 	Source          MarketplaceRecordSource `json:"source"`
 	InstallLocation string                  `json:"installLocation"`
+	LastUpdated     string                  `json:"lastUpdated"`
 }
 
 type MarketplaceRecordSource struct {
@@ -41,6 +43,14 @@ func LoadKnownMarketplaces(claudeDir string) (KnownMarketplaces, error) {
 
 // Save writes known_marketplaces.json atomically.
 func (km KnownMarketplaces) Save(claudeDir string) error {
+	// ensure all records have lastUpdated before writing
+	now := time.Now().UTC().Format(time.RFC3339)
+	for id, rec := range km {
+		if rec.LastUpdated == "" {
+			rec.LastUpdated = now
+			km[id] = rec
+		}
+	}
 	path := filepath.Join(claudeDir, marketplaceFile)
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return err
@@ -62,6 +72,7 @@ func (km KnownMarketplaces) Add(id, repo, installLocation string) {
 	km[id] = MarketplaceRecord{
 		Source:          MarketplaceRecordSource{Source: "github", Repo: repo},
 		InstallLocation: installLocation,
+		LastUpdated:     time.Now().UTC().Format(time.RFC3339),
 	}
 }
 

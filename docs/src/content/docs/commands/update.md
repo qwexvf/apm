@@ -1,5 +1,5 @@
 ---
-title: ccpm update
+title: apm update
 description: Update plugins to the latest version matching their constraint.
 sidebar:
   label: update
@@ -12,16 +12,16 @@ Resolve the latest version satisfying each plugin's constraint, show a diff, and
 
 ```sh
 # update all plugins
-ccpm update
+apm update
 
 # update one plugin
-ccpm update caveman@caveman
+apm update caveman@caveman
 
 # preview without applying
-ccpm update --dry-run
+apm update --dry-run
 
 # apply without prompt
-ccpm update --yes
+apm update --yes
 ```
 
 ## Flags
@@ -46,9 +46,9 @@ apply updates? [y/N]:
 When updates are applied:
 - New plugin versions are downloaded to the cache
 - `installed_plugins.json` and `settings.json` are updated
-- `ccpm.lock` is updated to the new versions
+- `apm.lock` is updated to the new versions
 
-`ccpm.toml` constraints are **not** changed — only the lockfile is updated to the new resolved version within those constraints.
+`apm.toml` constraints are **not** changed — only the lockfile is updated to the new resolved version within those constraints.
 
 > [!TIP]
-> To change a constraint (e.g. from `^2.1.0` to `^3.0.0`), edit `ccpm.toml` manually then run `ccpm update`.
+> To change a constraint (e.g. from `^2.1.0` to `^3.0.0`), edit `apm.toml` manually then run `apm update`.

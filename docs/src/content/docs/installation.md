@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install ccpm on Linux, macOS, or Windows.
+description: Install apm on Linux, macOS, or Windows.
 sidebar:
   order: 1
 ---
@@ -8,7 +8,7 @@ sidebar:
 ## go install
 
 ```sh
-go install github.com/qwexvf/ccpm@latest
+go install github.com/qwexvf/apm@latest
 ```
 
 Requires Go 1.21+.
@@ -16,21 +16,21 @@ Requires Go 1.21+.
 ## From source
 
 ```sh
-git clone https://github.com/qwexvf/ccpm
-cd ccpm
-go build -o ccpm .
-sudo mv ccpm /usr/local/bin/
+git clone https://github.com/qwexvf/apm
+cd apm
+go build -o apm .
+sudo mv apm /usr/local/bin/
 ```
 
 ## Verify
 
 ```sh
-ccpm --help
+apm --help
 ```
 
 ## GitHub token (recommended)
 
-ccpm uses the GitHub API to resolve plugin versions. Without a token you are rate-limited to 60 requests/hour. With a token: 5,000/hour.
+apm uses the GitHub API to resolve plugin versions. Without a token you are rate-limited to 60 requests/hour. With a token: 5,000/hour.
 
 ```sh
 export GITHUB_TOKEN=ghp_...

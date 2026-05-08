@@ -1,5 +1,5 @@
 ---
-title: ccpm list
+title: apm list
 description: List installed plugins and their status.
 sidebar:
   label: list
@@ -11,7 +11,7 @@ Show all plugins in the manifest with their installed version and status.
 ## Usage
 
 ```sh
-ccpm list
+apm list
 ```
 
 ## Example output
