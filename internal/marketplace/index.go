@@ -10,7 +10,6 @@ import (
 	"strings"
 )
 
-
 // PluginMeta is the minimal plugin.json content under .claude-plugin/.
 type PluginMeta struct {
 	Name        string `json:"name"`
@@ -28,6 +27,14 @@ type ListEntry struct {
 	Version     string
 }
 
+// UpdateResult is returned by EnsureCloned with change details.
+type UpdateResult struct {
+	LocalPath string
+	OldSHA    string // empty if freshly cloned
+	NewSHA    string
+	Cloned    bool // true if this was a fresh clone vs pull
+}
+
 // Index manages a local git clone of a marketplace repo.
 type Index struct {
 	ID        string // e.g. "claude-plugins-official"
@@ -41,34 +48,52 @@ func New(id, repo, localPath string) *Index {
 }
 
 // EnsureCloned clones the marketplace repo if not present, or fast-forwards.
-func (idx *Index) EnsureCloned(ctx context.Context) error {
+// Returns an UpdateResult with before/after SHAs and the local path.
+func (idx *Index) EnsureCloned(ctx context.Context) (*UpdateResult, error) {
+	res := &UpdateResult{LocalPath: idx.LocalPath}
+
 	if _, err := os.Stat(filepath.Join(idx.LocalPath, ".git")); err == nil {
-		return idx.Pull(ctx)
+		res.OldSHA = idx.headSHA(ctx)
+		if err := idx.pull(ctx); err != nil {
+			return nil, err
+		}
+		res.NewSHA = idx.headSHA(ctx)
+		return res, nil
 	}
+
 	// directory exists but has no .git — stale or partial; remove and re-clone
 	if _, err := os.Stat(idx.LocalPath); err == nil {
 		if err := os.RemoveAll(idx.LocalPath); err != nil {
-			return fmt.Errorf("remove stale dir %s: %w", idx.LocalPath, err)
+			return nil, fmt.Errorf("remove stale dir %s: %w", idx.LocalPath, err)
 		}
 	}
 	if err := os.MkdirAll(filepath.Dir(idx.LocalPath), 0755); err != nil {
-		return err
+		return nil, err
 	}
 	url := "https://github.com/" + idx.Repo + ".git"
 	cmd := exec.CommandContext(ctx, "git", "clone", "--depth=1", url, idx.LocalPath)
 	if out, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("clone %s: %s", url, strings.TrimSpace(string(out)))
+		return nil, fmt.Errorf("clone %s: %s", url, strings.TrimSpace(string(out)))
 	}
-	return nil
+	res.Cloned = true
+	res.NewSHA = idx.headSHA(ctx)
+	return res, nil
 }
 
-// Pull fast-forwards an existing clone.
-func (idx *Index) Pull(ctx context.Context) error {
+func (idx *Index) pull(ctx context.Context) error {
 	cmd := exec.CommandContext(ctx, "git", "-C", idx.LocalPath, "pull", "--ff-only")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("pull %s: %s", idx.Repo, strings.TrimSpace(string(out)))
 	}
 	return nil
+}
+
+func (idx *Index) headSHA(ctx context.Context) string {
+	out, err := exec.CommandContext(ctx, "git", "-C", idx.LocalPath, "rev-parse", "--short", "HEAD").Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
 }
 
 // ListPlugins returns all plugins in the marketplace.

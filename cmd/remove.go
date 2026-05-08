@@ -34,7 +34,19 @@ var removeCmd = &cobra.Command{
 
 		claudeDir := claude.Dir(m.PluginManager.Scope)
 
-		// manifest and lockfile first — if later steps fail, apm sync can recover
+		locked := lock.Get(id)
+		if locked == nil {
+			fmt.Printf("warning: %s not in lockfile — skipping file removal\n", id)
+		}
+
+		// uninstall files first — if this fails, nothing is changed yet
+		if locked != nil {
+			if err := installer.Uninstall(locked.InstallPath); err != nil {
+				return fmt.Errorf("uninstall: %w", err)
+			}
+		}
+
+		// files gone — now update tracking files
 		if !m.RemovePlugin(id) {
 			fmt.Printf("warning: %s not in manifest\n", id)
 		}
@@ -42,20 +54,9 @@ var removeCmd = &cobra.Command{
 			return err
 		}
 
-		locked := lock.Get(id)
-		if locked == nil {
-			fmt.Printf("warning: %s not in lockfile — skipping file removal\n", id)
-		}
 		lock.Remove(id)
 		if err := lock.Save(dir); err != nil {
 			return err
-		}
-
-		// filesystem removal
-		if locked != nil {
-			if err := installer.Uninstall(locked.InstallPath); err != nil {
-				return fmt.Errorf("uninstall: %w", err)
-			}
 		}
 
 		// runtime state — rebuild with apm sync if these fail

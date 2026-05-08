@@ -95,7 +95,11 @@ var installCmd = &cobra.Command{
 				InstalledAt:  time.Now().UTC(),
 			})
 			settings.EnablePlugin(locked.ID, true)
-			fmt.Printf("✓ %s @ %s\n", locked.ID, locked.Version)
+			if result.Integrity == "" {
+				fmt.Printf("✓ %s @ %s  (cached)\n", locked.ID, locked.Version)
+			} else {
+				fmt.Printf("✓ %s @ %s\n", locked.ID, locked.Version)
+			}
 		}
 
 		if lockDirty {

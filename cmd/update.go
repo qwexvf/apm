@@ -63,6 +63,7 @@ var updateCmd = &cobra.Command{
 			newVersion string
 			commitSHA  string
 			repo       string
+			constraint string
 		}
 
 		km, err := claude.LoadKnownMarketplaces(claudeDir)
@@ -110,6 +111,7 @@ var updateCmd = &cobra.Command{
 				newVersion: res.Version,
 				commitSHA:  res.CommitSHA,
 				repo:       repo,
+				constraint: constraint,
 			})
 		}
 
@@ -120,7 +122,7 @@ var updateCmd = &cobra.Command{
 
 		fmt.Println("\nupdates available:")
 		for _, u := range updates {
-			fmt.Printf("  %s  %s → %s\n", u.id, u.oldVersion, u.newVersion)
+			fmt.Printf("  %s  %s → %s  (%s)\n", u.id, u.oldVersion, u.newVersion, u.constraint)
 		}
 
 		if updateDryRun {

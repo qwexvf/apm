@@ -38,7 +38,8 @@ var initCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("created %s\n", path)
+		scope := m.PluginManager.Scope
+		fmt.Printf("created %s  (scope: %s)\n", path, scope)
 		fmt.Println("\nNext steps:")
 		fmt.Println("  apm add <plugin>@<marketplace>   # add a plugin")
 		fmt.Println("  apm install                       # install from lockfile")

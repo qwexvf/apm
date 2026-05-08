@@ -66,7 +66,7 @@ var marketplaceAddCmd = &cobra.Command{
 
 		idx := mktpkg.New(id, repo, installLocation)
 		fmt.Printf("cloning %s from github.com/%s...\n", id, repo)
-		if err := idx.EnsureCloned(ctx); err != nil {
+		if _, err := idx.EnsureCloned(ctx); err != nil {
 			return err
 		}
 
@@ -127,8 +127,12 @@ var marketplaceUpdateCmd = &cobra.Command{
 		defer cancel()
 
 		type result struct {
-			id  string
-			err error
+			id        string
+			localPath string
+			oldSHA    string
+			newSHA    string
+			cloned    bool
+			err       error
 		}
 
 		mktplaceDir := claude.MarketplaceCacheDir(claudeDir)
@@ -164,7 +168,18 @@ var marketplaceUpdateCmd = &cobra.Command{
 			go func(t target) {
 				defer wg.Done()
 				idx := mktpkg.New(t.id, t.repo, t.localPath)
-				results <- result{id: t.id, err: idx.EnsureCloned(ctx)}
+				ur, err := idx.EnsureCloned(ctx)
+				if err != nil {
+					results <- result{id: t.id, localPath: t.localPath, err: err}
+					return
+				}
+				results <- result{
+					id:        t.id,
+					localPath: ur.LocalPath,
+					oldSHA:    ur.OldSHA,
+					newSHA:    ur.NewSHA,
+					cloned:    ur.Cloned,
+				}
 			}(t)
 		}
 		go func() {
@@ -202,8 +217,14 @@ var marketplaceUpdateCmd = &cobra.Command{
 		for _, r := range collected {
 			if r.err != nil {
 				fmt.Printf("  ✗ %s: %v\n", r.id, r.err)
+				continue
+			}
+			if r.cloned {
+				fmt.Printf("  ✓ %s  cloned %s  %s\n", r.id, r.newSHA, r.localPath)
+			} else if r.oldSHA != r.newSHA && r.oldSHA != "" {
+				fmt.Printf("  ✓ %s  %s → %s  %s\n", r.id, r.oldSHA, r.newSHA, r.localPath)
 			} else {
-				fmt.Printf("  ✓ %s\n", r.id)
+				fmt.Printf("  ✓ %s  up to date (%s)  %s\n", r.id, r.newSHA, r.localPath)
 			}
 		}
 

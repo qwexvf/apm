@@ -53,6 +53,7 @@ func init() {
 		infoCmd,
 		lockCmd,
 		syncCmd,
+		pruneCmd,
 		marketplaceCmd,
 	)
 }

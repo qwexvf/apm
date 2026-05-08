@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"text/tabwriter"
 
 	"github.com/fatih/color"
@@ -40,6 +41,7 @@ var listCmd = &cobra.Command{
 
 		green := color.New(color.FgGreen).SprintFunc()
 		yellow := color.New(color.FgYellow).SprintFunc()
+		orange := color.New(color.FgYellow, color.Bold).SprintFunc()
 		dim := color.New(color.Faint).SprintFunc()
 
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
@@ -59,9 +61,28 @@ var listCmd = &cobra.Command{
 				path = entries[0].InstallPath
 			} else if locked != nil {
 				version = locked.Version
-				status = yellow("not installed")
-				if locked.InstallPath != "" {
-					path = dim(locked.InstallPath)
+				installPath := locked.InstallPath
+				if installPath == "" {
+					// reconstruct expected path from locked version
+					pluginName, mktplace, _ := config.SplitID(id)
+					installPath = claude.PluginInstallPath(claudeDir, mktplace, pluginName, locked.Version)
+				}
+				if _, err := os.Stat(installPath); err == nil {
+					// files on disk but not tracked in registry — needs apm sync
+					status = orange("on disk")
+					path = installPath
+				} else {
+					status = yellow("not installed")
+					if locked.InstallPath != "" {
+						path = dim(locked.InstallPath)
+					}
+				}
+			}
+
+			// trim path to be relative to home for readability
+			if home, err := os.UserHomeDir(); err == nil {
+				if rel, err := filepath.Rel(home, path); err == nil && len(rel) < len(path) {
+					path = "~/" + rel
 				}
 			}
 
