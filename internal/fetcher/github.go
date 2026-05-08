@@ -143,7 +143,7 @@ func extractTarGz(r io.Reader, destDir string) (string, error) {
 			if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
 				return "", err
 			}
-			f, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.FileMode(hdr.Mode)|0600)
+			f, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, hdr.FileInfo().Mode().Perm()|0600)
 			if err != nil {
 				return "", err
 			}
@@ -163,7 +163,9 @@ func extractTarGz(r io.Reader, destDir string) (string, error) {
 			if !strings.HasPrefix(filepath.Clean(linkTarget), filepath.Clean(destDir)+string(os.PathSeparator)) {
 				continue
 			}
-			os.Remove(target)
+			if err := os.Remove(target); err != nil && !os.IsNotExist(err) {
+				return "", fmt.Errorf("remove existing symlink target: %w", err)
+			}
 			if err := os.Symlink(hdr.Linkname, target); err != nil {
 				return "", err
 			}
