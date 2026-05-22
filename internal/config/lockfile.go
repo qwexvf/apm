@@ -12,6 +12,7 @@ const LockFile = "apm.lock"
 
 type Lock struct {
 	Plugins []LockedPlugin `toml:"plugin"`
+	Skills  []LockedSkill  `toml:"skill,omitempty"`
 }
 
 type LockedPlugin struct {
@@ -23,8 +24,17 @@ type LockedPlugin struct {
 	Integrity   string `toml:"integrity"` // "sha256:<hex>"
 }
 
+type LockedSkill struct {
+	ID          string `toml:"id"` // "<name>@<owner/repo>[:subpath]"
+	Version     string `toml:"version"`
+	CommitSHA   string `toml:"commit_sha"`
+	ResolvedURL string `toml:"resolved_url"`
+	InstallPath string `toml:"install_path"`
+	Integrity   string `toml:"integrity"`
+}
+
 func NewLock() *Lock {
-	return &Lock{Plugins: []LockedPlugin{}}
+	return &Lock{Plugins: []LockedPlugin{}, Skills: []LockedSkill{}}
 }
 
 // LoadLock reads apm.lock from dir.
@@ -90,6 +100,38 @@ func (l *Lock) Remove(id string) bool {
 	for i, p := range l.Plugins {
 		if p.ID == id {
 			l.Plugins = append(l.Plugins[:i], l.Plugins[i+1:]...)
+			return true
+		}
+	}
+	return false
+}
+
+// GetSkill returns the locked entry for a skill ID, or nil.
+func (l *Lock) GetSkill(id string) *LockedSkill {
+	for i := range l.Skills {
+		if l.Skills[i].ID == id {
+			return &l.Skills[i]
+		}
+	}
+	return nil
+}
+
+// UpsertSkill adds or replaces the locked entry for a skill.
+func (l *Lock) UpsertSkill(s LockedSkill) {
+	for i := range l.Skills {
+		if l.Skills[i].ID == s.ID {
+			l.Skills[i] = s
+			return
+		}
+	}
+	l.Skills = append(l.Skills, s)
+}
+
+// RemoveSkill deletes the locked entry for a skill ID.
+func (l *Lock) RemoveSkill(id string) bool {
+	for i, s := range l.Skills {
+		if s.ID == id {
+			l.Skills = append(l.Skills[:i], l.Skills[i+1:]...)
 			return true
 		}
 	}

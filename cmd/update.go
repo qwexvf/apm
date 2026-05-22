@@ -9,7 +9,6 @@ import (
 
 	"github.com/qwexvf/apm/internal/claude"
 	"github.com/qwexvf/apm/internal/config"
-	"github.com/qwexvf/apm/internal/fetcher"
 	"github.com/qwexvf/apm/internal/installer"
 	"github.com/qwexvf/apm/internal/resolver"
 )
@@ -34,16 +33,31 @@ var updateCmd = &cobra.Command{
 		}
 
 		claudeDir := claude.Dir(m.PluginManager.Scope)
-		gh := fetcher.NewGitHub()
+		gh := newGH()
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 
-		// filter to requested plugins or all
+		// filter to requested plugins/skills or all
 		toUpdate := m.Plugins
+		toUpdateSkills := m.Skills
 		if len(args) > 0 {
 			toUpdate = map[string]string{}
+			toUpdateSkills = map[string]string{}
 			for _, arg := range args {
+				if isSkillArg(arg) {
+					skillName, repo, subpath, _, err := config.ParseSkillArg(arg)
+					if err != nil {
+						return err
+					}
+					id := config.SkillID(skillName, repo, subpath)
+					constraint, ok := m.Skills[id]
+					if !ok {
+						return fmt.Errorf("%s not in manifest", id)
+					}
+					toUpdateSkills[id] = constraint
+					continue
+				}
 				pluginName, marketplace, _, err := config.ParsePluginArg(arg)
 				if err != nil {
 					return err
@@ -115,14 +129,65 @@ var updateCmd = &cobra.Command{
 			})
 		}
 
-		if len(updates) == 0 {
-			fmt.Println("all plugins up to date")
+		type skillUpdate struct {
+			id         string
+			oldVersion string
+			newVersion string
+			commitSHA  string
+			repo       string
+			subpath    string
+			skillName  string
+			constraint string
+		}
+		var skillUpdates []skillUpdate
+
+		for id, constraint := range toUpdateSkills {
+			skillName, repo, subpath, err := config.SplitSkillID(id)
+			if err != nil {
+				return err
+			}
+			res, err := resolver.Resolve(ctx, gh, repo, constraint)
+			if err != nil {
+				fmt.Printf("  skip %s: %v\n", id, err)
+				continue
+			}
+			locked := lock.GetSkill(id)
+			oldVersion := "(not installed)"
+			if locked != nil {
+				oldVersion = locked.Version
+				if locked.CommitSHA == res.CommitSHA {
+					fmt.Printf("  %s: already at %s\n", id, res.Version)
+					continue
+				}
+			}
+			skillUpdates = append(skillUpdates, skillUpdate{
+				id:         id,
+				oldVersion: oldVersion,
+				newVersion: res.Version,
+				commitSHA:  res.CommitSHA,
+				repo:       repo,
+				subpath:    subpath,
+				skillName:  skillName,
+				constraint: constraint,
+			})
+		}
+
+		if len(updates) == 0 && len(skillUpdates) == 0 {
+			fmt.Println("all items up to date")
 			return nil
 		}
 
-		fmt.Println("\nupdates available:")
-		for _, u := range updates {
-			fmt.Printf("  %s  %s → %s  (%s)\n", u.id, u.oldVersion, u.newVersion, u.constraint)
+		if len(updates) > 0 {
+			fmt.Println("\nplugin updates available:")
+			for _, u := range updates {
+				fmt.Printf("  %s  %s → %s  (%s)\n", u.id, u.oldVersion, u.newVersion, u.constraint)
+			}
+		}
+		if len(skillUpdates) > 0 {
+			fmt.Println("\nskill updates available:")
+			for _, u := range skillUpdates {
+				fmt.Printf("  %s  %s → %s  (%s)\n", u.id, u.oldVersion, u.newVersion, u.constraint)
+			}
 		}
 
 		if updateDryRun {
@@ -189,6 +254,30 @@ var updateCmd = &cobra.Command{
 			fmt.Printf("  ✓ %s @ %s\n", u.id, u.newVersion)
 		}
 
+		for _, u := range skillUpdates {
+			result, err := installer.InstallSkill(ctx, gh, claudeDir, u.skillName, u.repo, u.newVersion, u.subpath)
+			if err != nil {
+				fmt.Printf("  ✗ %s: %v\n", u.id, err)
+				failed = append(failed, u.id+": "+err.Error())
+				continue
+			}
+			integrity := result.Integrity
+			if integrity == "" {
+				if existing := lock.GetSkill(u.id); existing != nil {
+					integrity = existing.Integrity
+				}
+			}
+			lock.UpsertSkill(config.LockedSkill{
+				ID:          u.id,
+				Version:     u.newVersion,
+				CommitSHA:   u.commitSHA,
+				ResolvedURL: "https://github.com/" + u.repo,
+				InstallPath: result.InstallPath,
+				Integrity:   integrity,
+			})
+			fmt.Printf("  ✓ skill %s @ %s\n", u.id, u.newVersion)
+		}
+
 		// lockfile first — runtime state can be rebuilt with apm sync
 		if err := lock.Save(dir); err != nil {
 			return err
@@ -204,7 +293,7 @@ var updateCmd = &cobra.Command{
 			for _, f := range failed {
 				fmt.Println("  ✗", f)
 			}
-			return fmt.Errorf("%d plugin(s) failed to update", len(failed))
+			return fmt.Errorf("%d item(s) failed to update", len(failed))
 		}
 		return nil
 	},

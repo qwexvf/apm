@@ -34,8 +34,8 @@ var listCmd = &cobra.Command{
 			return err
 		}
 
-		if len(m.Plugins) == 0 {
-			fmt.Println("no plugins in manifest")
+		if len(m.Plugins) == 0 && len(m.Skills) == 0 {
+			fmt.Println("nothing in manifest")
 			return nil
 		}
 
@@ -44,51 +44,89 @@ var listCmd = &cobra.Command{
 		orange := color.New(color.FgYellow, color.Bold).SprintFunc()
 		dim := color.New(color.Faint).SprintFunc()
 
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-		fmt.Fprintln(w, "PLUGIN\tVERSION\tCONSTRAINT\tSTATUS\tPATH")
-
-		for id, constraint := range m.Plugins {
-			entries := reg.Get(id)
-			locked := lock.Get(id)
-
-			version := "-"
-			status := yellow("not installed")
-			path := dim("-")
-
-			if len(entries) > 0 {
-				version = entries[0].Version
-				status = green("installed")
-				path = entries[0].InstallPath
-			} else if locked != nil {
-				version = locked.Version
-				installPath := locked.InstallPath
-				if installPath == "" {
-					// reconstruct expected path from locked version
-					pluginName, mktplace, _ := config.SplitID(id)
-					installPath = claude.PluginInstallPath(claudeDir, mktplace, pluginName, locked.Version)
-				}
-				if _, err := os.Stat(installPath); err == nil {
-					// files on disk but not tracked in registry — needs apm sync
-					status = orange("on disk")
-					path = installPath
-				} else {
-					status = yellow("not installed")
-					if locked.InstallPath != "" {
-						path = dim(locked.InstallPath)
-					}
-				}
+		home, _ := os.UserHomeDir()
+		shorten := func(p string) string {
+			if home == "" {
+				return p
 			}
-
-			// trim path to be relative to home for readability
-			if home, err := os.UserHomeDir(); err == nil {
-				if rel, err := filepath.Rel(home, path); err == nil && len(rel) < len(path) {
-					path = "~/" + rel
-				}
+			if rel, err := filepath.Rel(home, p); err == nil && len(rel) < len(p) {
+				return "~/" + rel
 			}
-
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", id, version, constraint, status, path)
+			return p
 		}
 
-		return w.Flush()
+		if len(m.Plugins) > 0 {
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+			fmt.Fprintln(w, "PLUGIN\tVERSION\tCONSTRAINT\tSTATUS\tPATH")
+
+			for id, constraint := range m.Plugins {
+				entries := reg.Get(id)
+				locked := lock.Get(id)
+
+				version := "-"
+				status := yellow("not installed")
+				path := dim("-")
+
+				if len(entries) > 0 {
+					version = entries[0].Version
+					status = green("installed")
+					path = shorten(entries[0].InstallPath)
+				} else if locked != nil {
+					version = locked.Version
+					installPath := locked.InstallPath
+					if installPath == "" {
+						pluginName, mktplace, _ := config.SplitID(id)
+						installPath = claude.PluginInstallPath(claudeDir, mktplace, pluginName, locked.Version)
+					}
+					if _, err := os.Stat(installPath); err == nil {
+						status = orange("on disk")
+						path = shorten(installPath)
+					} else {
+						status = yellow("not installed")
+						if locked.InstallPath != "" {
+							path = dim(shorten(locked.InstallPath))
+						}
+					}
+				}
+
+				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", id, version, constraint, status, path)
+			}
+			if err := w.Flush(); err != nil {
+				return err
+			}
+		}
+
+		if len(m.Skills) > 0 {
+			if len(m.Plugins) > 0 {
+				fmt.Println()
+			}
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+			fmt.Fprintln(w, "SKILL\tVERSION\tCONSTRAINT\tSTATUS\tPATH")
+
+			for id, constraint := range m.Skills {
+				locked := lock.GetSkill(id)
+				skillName, _, _, _ := config.SplitSkillID(id)
+				expected := claude.SkillInstallPath(claudeDir, skillName)
+
+				version := "-"
+				status := yellow("not installed")
+				path := dim("-")
+
+				if locked != nil {
+					version = locked.Version
+				}
+				if _, err := os.Stat(filepath.Join(expected, "SKILL.md")); err == nil {
+					status = green("installed")
+					path = shorten(expected)
+				} else if locked != nil && locked.InstallPath != "" {
+					path = dim(shorten(locked.InstallPath))
+				}
+
+				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", id, version, constraint, status, path)
+			}
+			return w.Flush()
+		}
+
+		return nil
 	},
 }

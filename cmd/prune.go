@@ -39,6 +39,15 @@ var pruneCmd = &cobra.Command{
 			}
 		}
 
+		// build set of skill names referenced in the lockfile
+		referencedSkills := make(map[string]bool, len(lock.Skills))
+		for _, s := range lock.Skills {
+			name, _, _, err := config.SplitSkillID(s.ID)
+			if err == nil {
+				referencedSkills[name] = true
+			}
+		}
+
 		// walk the cache and collect unreferenced version directories
 		// structure: <cacheDir>/<marketplace>/<plugin>/<version>/
 		var orphans []string
@@ -80,12 +89,31 @@ var pruneCmd = &cobra.Command{
 			}
 		}
 
+		// orphan skills: dirs under <claudeDir>/skills/ not referenced by lock.
+		// always includes the .staging dir if present.
+		skillsRoot := claude.SkillsDir(claudeDir)
+		if sentries, err := os.ReadDir(skillsRoot); err == nil {
+			for _, e := range sentries {
+				if !e.IsDir() {
+					continue
+				}
+				name := e.Name()
+				if name == ".staging" {
+					orphans = append(orphans, filepath.Clean(filepath.Join(skillsRoot, name)))
+					continue
+				}
+				if !referencedSkills[name] {
+					orphans = append(orphans, filepath.Clean(filepath.Join(skillsRoot, name)))
+				}
+			}
+		}
+
 		if len(orphans) == 0 {
 			fmt.Println("nothing to prune")
 			return nil
 		}
 
-		fmt.Printf("%d orphaned version(s):\n", len(orphans))
+		fmt.Printf("%d orphaned dir(s):\n", len(orphans))
 		var totalSize int64
 		for _, p := range orphans {
 			size := dirSize(p)

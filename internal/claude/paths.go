@@ -44,3 +44,13 @@ func MarketplaceCacheDir(claudeDir string) string {
 func PluginInstallPath(claudeDir, marketplaceID, pluginName, version string) string {
 	return filepath.Join(CacheDir(claudeDir), marketplaceID, pluginName, version)
 }
+
+// SkillsDir returns the canonical skills root: <claudeDir>/skills.
+func SkillsDir(claudeDir string) string {
+	return filepath.Join(claudeDir, "skills")
+}
+
+// SkillInstallPath returns the install path for a skill by name.
+func SkillInstallPath(claudeDir, skillName string) string {
+	return filepath.Join(SkillsDir(claudeDir), skillName)
+}

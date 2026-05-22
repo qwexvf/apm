@@ -9,7 +9,6 @@ import (
 
 	"github.com/qwexvf/apm/internal/claude"
 	"github.com/qwexvf/apm/internal/config"
-	"github.com/qwexvf/apm/internal/fetcher"
 	"github.com/qwexvf/apm/internal/installer"
 )
 
@@ -29,13 +28,13 @@ var installCmd = &cobra.Command{
 			return err
 		}
 
-		if len(lock.Plugins) == 0 {
+		if len(lock.Plugins) == 0 && len(lock.Skills) == 0 {
 			fmt.Println("lockfile is empty — run: apm add <plugin>")
 			return nil
 		}
 
 		claudeDir := claude.Dir(m.PluginManager.Scope)
-		gh := fetcher.NewGitHub()
+		gh := newGH()
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
@@ -102,6 +101,25 @@ var installCmd = &cobra.Command{
 			}
 		}
 
+		// install skills
+		for i, locked := range lock.Skills {
+			skillName, repo, subpath, err := config.SplitSkillID(locked.ID)
+			if err != nil {
+				failed = append(failed, locked.ID+": "+err.Error())
+				continue
+			}
+			result, err := installer.InstallSkill(ctx, gh, claudeDir, skillName, repo, locked.Version, subpath)
+			if err != nil {
+				failed = append(failed, locked.ID+": "+err.Error())
+				continue
+			}
+			if lock.Skills[i].InstallPath != result.InstallPath {
+				lock.Skills[i].InstallPath = result.InstallPath
+				lockDirty = true
+			}
+			fmt.Printf("✓ skill %s @ %s\n", locked.ID, locked.Version)
+		}
+
 		if lockDirty {
 			if err := lock.Save(dir); err != nil {
 				return err
@@ -119,10 +137,11 @@ var installCmd = &cobra.Command{
 			for _, f := range failed {
 				fmt.Println("  ✗", f)
 			}
-			return fmt.Errorf("%d plugin(s) failed to install", len(failed))
+			return fmt.Errorf("%d item(s) failed to install", len(failed))
 		}
 
-		fmt.Printf("\n%d plugin(s) installed\n", len(lock.Plugins)-len(failed))
+		totalOK := len(lock.Plugins) + len(lock.Skills) - len(failed)
+		fmt.Printf("\n%d item(s) installed\n", totalOK)
 		return nil
 	},
 }

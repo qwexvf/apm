@@ -9,7 +9,6 @@ import (
 
 	"github.com/qwexvf/apm/internal/claude"
 	"github.com/qwexvf/apm/internal/config"
-	"github.com/qwexvf/apm/internal/fetcher"
 	"github.com/qwexvf/apm/internal/resolver"
 )
 
@@ -33,7 +32,7 @@ var lockCmd = &cobra.Command{
 			return fmt.Errorf("load registry: %w", err)
 		}
 
-		gh := fetcher.NewGitHub()
+		gh := newGH()
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
@@ -82,11 +81,37 @@ var lockCmd = &cobra.Command{
 			fmt.Printf("  locked %s @ %s\n", id, res.Version)
 		}
 
+		for id, constraint := range m.Skills {
+			_, repo, subpath, err := config.SplitSkillID(id)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("resolving %s @ %s...\n", id, constraint)
+			res, err := resolver.Resolve(ctx, gh, repo, constraint)
+			if err != nil {
+				return err
+			}
+
+			skillName, _, _, _ := config.SplitSkillID(id)
+			expected := claude.SkillInstallPath(claudeDir, skillName)
+			_ = subpath // subpath is encoded in id, used by installer
+
+			lock.UpsertSkill(config.LockedSkill{
+				ID:          id,
+				Version:     res.Version,
+				CommitSHA:   res.CommitSHA,
+				ResolvedURL: "https://github.com/" + repo,
+				InstallPath: expected,
+			})
+			fmt.Printf("  locked skill %s @ %s\n", id, res.Version)
+		}
+
 		if err := lock.Save(dir); err != nil {
 			return err
 		}
 
-		fmt.Printf("\n%s updated (%d plugins)\n", config.LockFile, len(lock.Plugins))
+		fmt.Printf("\n%s updated (%d plugins, %d skills)\n", config.LockFile, len(lock.Plugins), len(lock.Skills))
 		return nil
 	},
 }

@@ -55,6 +55,7 @@ func init() {
 		syncCmd,
 		pruneCmd,
 		marketplaceCmd,
+		scaffoldCmd,
 	)
 }
 

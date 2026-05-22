@@ -7,6 +7,7 @@ Claude Code's built-in plugin system has no lockfile, no version constraints, no
 ```sh
 apm add figma@claude-plugins-official@^2.1.0
 apm add caveman@caveman
+apm add frontend-design@vercel-labs/skills:skills/frontend-design   # a SKILL.md
 git add apm.toml apm.lock
 ```
 
@@ -43,8 +44,9 @@ go install github.com/qwexvf/apm@latest
 | Command | Description |
 |---------|-------------|
 | `apm init` | Scaffold `apm.toml` |
-| `apm add <plugin[@constraint]>` | Add + install + lock |
+| `apm add <plugin[@constraint]>` | Add + install + lock (plugin or skill) |
 | `apm remove <plugin>` | Remove + uninstall |
+| `apm scaffold skill <name>` | Write a starter `SKILL.md` in `./skills/<name>/` |
 | `apm install` | Deterministic install from lockfile |
 | `apm update [plugin]` | Bump to latest matching constraint |
 | `apm list` | Show installed plugins and locked versions |
@@ -63,7 +65,31 @@ go install github.com/qwexvf/apm@latest
 "caveman@caveman"                   = "*"          # latest
 "gopls-lsp@claude-plugins-official" = "1.0.0"     # exact
 "myplugin@mymarket"                 = "abc123"     # commit SHA
+
+[skills]
+"frontend-design@vercel-labs/skills:skills/frontend-design" = "*"
+"graphify@qwexvf/dotfiles:.claude/skills/graphify"          = "main"
 ```
+
+## Skills
+
+`apm` installs standalone `SKILL.md` files alongside full plugins. Source is
+any GitHub repo; an optional `:subpath` selects a subdirectory inside the
+repo when the skill lives there.
+
+```sh
+# install from any GitHub repo
+apm add frontend-design@vercel-labs/skills:skills/frontend-design
+
+# scaffold a new skill in this repo
+apm scaffold skill my-skill   # writes ./skills/my-skill/SKILL.md
+
+# remove
+apm remove frontend-design@vercel-labs/skills:skills/frontend-design
+```
+
+Skills land in `<claudeDir>/skills/<name>/`. Version constraints, lockfile
+pinning, and `apm install` behave the same as for plugins.
 
 ## GitHub token
 

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -28,7 +29,7 @@ var syncCmd = &cobra.Command{
 			return err
 		}
 
-		if len(lock.Plugins) == 0 {
+		if len(lock.Plugins) == 0 && len(lock.Skills) == 0 {
 			fmt.Println("lockfile is empty")
 			return nil
 		}
@@ -69,6 +70,21 @@ var syncCmd = &cobra.Command{
 		}
 		if err := settings.Save(claudeDir); err != nil {
 			return err
+		}
+
+		// skills don't write to registry/settings — just verify presence
+		for _, locked := range lock.Skills {
+			skillName, _, _, err := config.SplitSkillID(locked.ID)
+			if err != nil {
+				fmt.Printf("  warning: %s: %v\n", locked.ID, err)
+				continue
+			}
+			expected := claude.SkillInstallPath(claudeDir, skillName)
+			if _, err := os.Stat(filepath.Join(expected, "SKILL.md")); err != nil {
+				fmt.Printf("  warning: skill %s missing on disk — run: apm install\n", locked.ID)
+				continue
+			}
+			fmt.Printf("  ✓ skill %s @ %s\n", locked.ID, locked.Version)
 		}
 
 		fmt.Println("\nClaude Code state synced from lockfile")

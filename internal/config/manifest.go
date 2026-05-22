@@ -19,6 +19,7 @@ type MarketplaceSource struct {
 type Manifest struct {
 	PluginManager PluginManagerConfig          `toml:"plugin_manager"`
 	Plugins       map[string]string            `toml:"plugins"`
+	Skills        map[string]string            `toml:"skills,omitempty"`
 	Marketplaces  map[string]MarketplaceSource `toml:"marketplaces"`
 }
 
@@ -30,6 +31,7 @@ func NewManifest() *Manifest {
 	return &Manifest{
 		PluginManager: PluginManagerConfig{Scope: "user"},
 		Plugins:       map[string]string{},
+		Skills:        map[string]string{},
 		Marketplaces:  map[string]MarketplaceSource{},
 	}
 }
@@ -127,4 +129,78 @@ func SplitID(id string) (name, marketplace string, err error) {
 		return "", "", fmt.Errorf("invalid plugin ID %q: missing @", id)
 	}
 	return name, marketplace, nil
+}
+
+// AddSkill adds or updates a skill entry in the manifest.
+func (m *Manifest) AddSkill(id, constraint string) {
+	if m.Skills == nil {
+		m.Skills = map[string]string{}
+	}
+	if constraint == "" {
+		constraint = "*"
+	}
+	m.Skills[id] = constraint
+}
+
+// RemoveSkill removes a skill from the manifest.
+func (m *Manifest) RemoveSkill(id string) bool {
+	if _, ok := m.Skills[id]; ok {
+		delete(m.Skills, id)
+		return true
+	}
+	return false
+}
+
+// ParseSkillArg parses "name@owner/repo[:subpath][@constraint]" into parts.
+// Returns (name, repo, subpath, constraint, error). subpath may be "".
+func ParseSkillArg(arg string) (name, repo, subpath, constraint string, err error) {
+	parts := strings.SplitN(arg, "@", 3)
+	switch len(parts) {
+	case 1:
+		return "", "", "", "", fmt.Errorf("missing source: use name@owner/repo[:subpath] format")
+	case 2:
+		name = parts[0]
+		repo, subpath = splitRepoSubpath(parts[1])
+		constraint = "*"
+	case 3:
+		name = parts[0]
+		repo, subpath = splitRepoSubpath(parts[1])
+		constraint = parts[2]
+	}
+	if name == "" {
+		return "", "", "", "", fmt.Errorf("missing skill name in %q", arg)
+	}
+	if repo == "" {
+		return "", "", "", "", fmt.Errorf("missing source in %q", arg)
+	}
+	if !strings.Contains(repo, "/") {
+		return "", "", "", "", fmt.Errorf("source must be owner/repo, got %q", repo)
+	}
+	return name, repo, subpath, constraint, nil
+}
+
+func splitRepoSubpath(src string) (repo, subpath string) {
+	repo, subpath, _ = strings.Cut(src, ":")
+	return repo, subpath
+}
+
+// SkillID returns "<name>@<repo>" or "<name>@<repo>:<subpath>".
+func SkillID(name, repo, subpath string) string {
+	if subpath == "" {
+		return name + "@" + repo
+	}
+	return name + "@" + repo + ":" + subpath
+}
+
+// SplitSkillID splits a skill ID back into (name, repo, subpath).
+func SplitSkillID(id string) (name, repo, subpath string, err error) {
+	name, src, ok := strings.Cut(id, "@")
+	if !ok {
+		return "", "", "", fmt.Errorf("invalid skill ID %q: missing @", id)
+	}
+	repo, subpath = splitRepoSubpath(src)
+	if !strings.Contains(repo, "/") {
+		return "", "", "", fmt.Errorf("invalid skill ID %q: source must be owner/repo", id)
+	}
+	return name, repo, subpath, nil
 }
