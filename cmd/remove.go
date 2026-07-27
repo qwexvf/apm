@@ -35,16 +35,10 @@ func runRemovePlugin(arg string) error {
 		return err
 	}
 
-	if err := requireClaude(m, "marketplace plugins"); err != nil {
-		return err
-	}
-
 	lock, err := config.LoadLock(dir)
 	if err != nil {
 		return err
 	}
-
-	claudeDir := targetDir(m)
 
 	locked := lock.Get(id)
 	if locked == nil {
@@ -53,6 +47,11 @@ func runRemovePlugin(arg string) error {
 
 	// uninstall files first — if this fails, nothing is changed yet
 	if locked != nil {
+		for _, p := range locked.Extracted {
+			if err := installer.Uninstall(p); err != nil {
+				return fmt.Errorf("uninstall extracted %s: %w", p, err)
+			}
+		}
 		if err := installer.Uninstall(locked.InstallPath); err != nil {
 			return fmt.Errorf("uninstall: %w", err)
 		}
@@ -72,22 +71,25 @@ func runRemovePlugin(arg string) error {
 	}
 
 	// runtime state — rebuild with apm sync if these fail
-	reg, err := claude.LoadRegistry(claudeDir)
-	if err != nil {
-		return err
-	}
-	reg.Remove(id, m.PluginManager.Scope)
-	if err := reg.Save(claudeDir); err != nil {
-		return err
-	}
+	if resolveTarget(m) == "claude" {
+		claudeDir := targetDir(m)
+		reg, err := claude.LoadRegistry(claudeDir)
+		if err != nil {
+			return err
+		}
+		reg.Remove(id, m.PluginManager.Scope)
+		if err := reg.Save(claudeDir); err != nil {
+			return err
+		}
 
-	settings, err := claude.LoadSettings(claudeDir)
-	if err != nil {
-		return err
-	}
-	settings.DisablePlugin(id)
-	if err := settings.Save(claudeDir); err != nil {
-		return err
+		settings, err := claude.LoadSettings(claudeDir)
+		if err != nil {
+			return err
+		}
+		settings.DisablePlugin(id)
+		if err := settings.Save(claudeDir); err != nil {
+			return err
+		}
 	}
 
 	fmt.Printf("✓ removed %s\n", id)

@@ -214,13 +214,62 @@ func TestRunAddPlugin_OpenCodeTarget_Rejected(t *testing.T) {
 	m := config.NewManifest()
 	m.PluginManager.Scope = "local"
 	m.PluginManager.Target = "opencode"
+	// no marketplaces seeded — should fail with unknown marketplace
 	if err := m.Save(dir); err != nil {
 		t.Fatal(err)
 	}
 
+	// Without the marketplace registered in the manifest, the add
+	// should fail with "unknown marketplace".
 	err := runAddPlugin("figma@official@^2.1.0")
-	if err == nil || !strings.Contains(err.Error(), "not supported for target") {
-		t.Errorf("expected unsupported-target error, got: %v", err)
+	if err == nil || !strings.Contains(err.Error(), "unknown marketplace") {
+		t.Errorf("expected unknown marketplace error, got: %v", err)
+	}
+}
+
+func TestRunAddPlugin_OpenCodeTarget_WithExtraction(t *testing.T) {
+	gh := &fakeGH{
+		tags:  []string{"v1.0.0"},
+		sha:   "aaabbbcccdddeeefff1112223334445556667778",
+		files: map[string]string{
+			"skills/myskill/SKILL.md": "---\nname: myskill\n---",
+			"agents/myagent.md":       "---\nname: myagent\n---",
+		},
+	}
+	dir := setupLocalScope(t, gh)
+
+	m := config.NewManifest()
+	m.PluginManager.Scope = "local"
+	m.PluginManager.Target = "opencode"
+	m.Marketplaces["myplug"] = config.MarketplaceSource{Source: "github", Repo: "test/repo"}
+	if err := m.Save(dir); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := runAddPlugin("myplug@myplug@^1.0.0"); err != nil {
+		t.Fatalf("runAddPlugin: %v", err)
+	}
+
+	// skill should be extracted
+	if _, err := os.Stat(filepath.Join(dir, ".opencode", "skills", "myskill", "SKILL.md")); err != nil {
+		t.Errorf("skill not extracted: %v", err)
+	}
+
+	// agent should be extracted
+	if _, err := os.Stat(filepath.Join(dir, ".opencode", "agent", "myagent.md")); err != nil {
+		t.Errorf("agent not extracted: %v", err)
+	}
+
+	lock, err := config.LoadLock(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	locked := lock.Get("myplug@myplug")
+	if locked == nil {
+		t.Fatal("plugin not in lockfile")
+	}
+	if len(locked.Extracted) != 2 {
+		t.Errorf("Extracted = %d paths, want 2", len(locked.Extracted))
 	}
 }
 

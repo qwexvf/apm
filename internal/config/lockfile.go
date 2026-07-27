@@ -16,12 +16,13 @@ type Lock struct {
 }
 
 type LockedPlugin struct {
-	ID          string `toml:"id"`
-	Version     string `toml:"version"`
-	CommitSHA   string `toml:"commit_sha"`
-	ResolvedURL string `toml:"resolved_url"`
-	InstallPath string `toml:"install_path"`
-	Integrity   string `toml:"integrity"` // "sha256:<hex>"
+	ID          string   `toml:"id"`
+	Version     string   `toml:"version"`
+	CommitSHA   string   `toml:"commit_sha"`
+	ResolvedURL string   `toml:"resolved_url"`
+	InstallPath string   `toml:"install_path"`
+	Integrity   string   `toml:"integrity"`
+	Extracted   []string `toml:"extracted,omitempty"` // opencode: extracted skill/agent paths
 }
 
 type LockedSkill struct {

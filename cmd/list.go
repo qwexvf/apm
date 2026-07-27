@@ -90,6 +90,9 @@ var listCmd = &cobra.Command{
 					if _, err := os.Stat(installPath); err == nil {
 						status = orange("on disk")
 						path = shorten(installPath)
+					} else if resolveTarget(m) != "claude" && len(locked.Extracted) > 0 {
+						status = green("extracted")
+						path = dim(shorten(locked.InstallPath))
 					} else {
 						status = yellow("not installed")
 						if locked.InstallPath != "" {
@@ -99,6 +102,13 @@ var listCmd = &cobra.Command{
 				}
 
 				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", id, version, constraint, status, path)
+
+				// show extracted components for opencode-target plugins
+				if locked != nil && len(locked.Extracted) > 0 {
+					for _, p := range locked.Extracted {
+						fmt.Fprintf(w, "  ↳ component\t\t\t\t%s\n", shorten(p))
+					}
+				}
 			}
 			if err := w.Flush(); err != nil {
 				return err

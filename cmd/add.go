@@ -51,10 +51,9 @@ func runAddPlugin(arg string) error {
 		// no manifest yet — treat as init+add
 		m = config.NewManifest()
 		m.PluginManager.Scope = resolveScope()
-	}
-
-	if err := requireClaude(m, "marketplace plugins"); err != nil {
-		return err
+		if targetFlag != "" {
+			m.PluginManager.Target = resolveTarget(nil)
+		}
 	}
 
 	lock, err := config.LoadLock(dir)
@@ -62,16 +61,21 @@ func runAddPlugin(arg string) error {
 		return err
 	}
 
-	claudeDir := targetDir(m)
+	tgt := resolveTarget(m)
+	isOC := tgt != "claude"
+	toolDir := targetDir(m)
 
-	// find marketplace repo
-	km, err := claude.LoadKnownMarketplaces(claudeDir)
-	if err != nil {
-		return err
+	// find marketplace repo — for claude use the known_marketplaces.json
+	// runtime state; for opencode use the manifest only
+	var repo string
+	if !isOC {
+		km, err := claude.LoadKnownMarketplaces(toolDir)
+		if err != nil {
+			return err
+		}
+		repo = km.Repo(marketplace)
 	}
-	repo := km.Repo(marketplace)
 	if repo == "" {
-		// check manifest marketplaces
 		if ms, ok := m.Marketplaces[marketplace]; ok {
 			repo = ms.Repo
 		}
@@ -91,9 +95,20 @@ func runAddPlugin(arg string) error {
 	}
 	fmt.Printf("resolved: %s @ %s (%s)\n", id, res.Version, shortSHA(res.CommitSHA))
 
-	result, err := installer.Install(ctx, gh, claudeDir, marketplace, pluginName, repo, res.Version)
+	result, err := installer.Install(ctx, gh, toolDir, marketplace, pluginName, repo, res.Version)
 	if err != nil {
 		return err
+	}
+
+	var extracted []string
+	if isOC {
+		extracted, err = installer.ExtractComponents(result.InstallPath, toolDir)
+		if err != nil {
+			return fmt.Errorf("extract components: %w", err)
+		}
+		for _, p := range extracted {
+			fmt.Printf("  extracted %s\n", p)
+		}
 	}
 
 	// preserve existing integrity if installer skipped a cached directory
@@ -117,34 +132,37 @@ func runAddPlugin(arg string) error {
 		ResolvedURL: "https://github.com/" + repo,
 		InstallPath: result.InstallPath,
 		Integrity:   integrity,
+		Extracted:   extracted,
 	})
 	if err := lock.Save(dir); err != nil {
 		return err
 	}
 
 	// runtime state — can be rebuilt with apm sync
-	reg, err := claude.LoadRegistry(claudeDir)
-	if err != nil {
-		return err
-	}
-	reg.Upsert(id, claude.InstallEntry{
-		Scope:        m.PluginManager.Scope,
-		InstallPath:  result.InstallPath,
-		Version:      res.Version,
-		GitCommitSHA: res.CommitSHA,
-		InstalledAt:  time.Now().UTC(),
-	})
-	if err := reg.Save(claudeDir); err != nil {
-		return err
-	}
+	if !isOC {
+		reg, err := claude.LoadRegistry(toolDir)
+		if err != nil {
+			return err
+		}
+		reg.Upsert(id, claude.InstallEntry{
+			Scope:        m.PluginManager.Scope,
+			InstallPath:  result.InstallPath,
+			Version:      res.Version,
+			GitCommitSHA: res.CommitSHA,
+			InstalledAt:  time.Now().UTC(),
+		})
+		if err := reg.Save(toolDir); err != nil {
+			return err
+		}
 
-	settings, err := claude.LoadSettings(claudeDir)
-	if err != nil {
-		return err
-	}
-	settings.EnablePlugin(id, true)
-	if err := settings.Save(claudeDir); err != nil {
-		return err
+		settings, err := claude.LoadSettings(toolDir)
+		if err != nil {
+			return err
+		}
+		settings.EnablePlugin(id, true)
+		if err := settings.Save(toolDir); err != nil {
+			return err
+		}
 	}
 
 	fmt.Printf("✓ installed %s @ %s\n", id, res.Version)

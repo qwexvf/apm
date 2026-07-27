@@ -43,34 +43,34 @@ var marketplaceAddCmd = &cobra.Command{
 			m.PluginManager.Scope = resolveScope()
 		}
 
-		if err := requireClaude(m, "marketplaces"); err != nil {
-			return err
+		isClaude := resolveTarget(m) == "claude"
+
+		if isClaude {
+			claudeDir := targetDir(m)
+			km, err := claude.LoadKnownMarketplaces(claudeDir)
+			if err != nil {
+				return err
+			}
+
+			installLocation := filepath.Join(claude.MarketplaceCacheDir(claudeDir), id)
+			km.Add(id, repo, installLocation)
+			if err := km.Save(claudeDir); err != nil {
+				return err
+			}
+
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+
+			idx := mktpkg.New(id, repo, installLocation)
+			fmt.Printf("cloning %s from github.com/%s...\n", id, repo)
+			if _, err := idx.EnsureCloned(ctx); err != nil {
+				return err
+			}
 		}
 
-		claudeDir := targetDir(m)
-		km, err := claude.LoadKnownMarketplaces(claudeDir)
-		if err != nil {
-			return err
-		}
-
-		installLocation := filepath.Join(claude.MarketplaceCacheDir(claudeDir), id)
-		km.Add(id, repo, installLocation)
-		if err := km.Save(claudeDir); err != nil {
-			return err
-		}
-
-		// also add to manifest
+		// always add to manifest
 		m.Marketplaces[id] = config.MarketplaceSource{Source: "github", Repo: repo}
 		if err := m.Save(dir); err != nil {
-			return err
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-		defer cancel()
-
-		idx := mktpkg.New(id, repo, installLocation)
-		fmt.Printf("cloning %s from github.com/%s...\n", id, repo)
-		if _, err := idx.EnsureCloned(ctx); err != nil {
 			return err
 		}
 
@@ -90,27 +90,44 @@ var marketplaceListCmd = &cobra.Command{
 			m.PluginManager.Scope = resolveScope()
 		}
 
-		if err := requireClaude(m, "marketplaces"); err != nil {
-			return err
+		isClaude := resolveTarget(m) == "claude"
+		var listed bool
+
+		if isClaude {
+			claudeDir := targetDir(m)
+			km, err := claude.LoadKnownMarketplaces(claudeDir)
+			if err != nil {
+				return err
+			}
+
+			if len(km) > 0 {
+				w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+				fmt.Fprintln(w, "ID\tREPO\tLOCATION")
+				for id, rec := range km {
+					fmt.Fprintf(w, "%s\tgithub.com/%s\t%s\n", id, rec.Source.Repo, rec.InstallLocation)
+				}
+				w.Flush()
+				listed = true
+			}
 		}
 
-		claudeDir := targetDir(m)
-		km, err := claude.LoadKnownMarketplaces(claudeDir)
-		if err != nil {
-			return err
+		if len(m.Marketplaces) > 0 {
+			if listed {
+				fmt.Println()
+			}
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+			fmt.Fprintln(w, "MANIFEST MARKETPLACES")
+			for id, ms := range m.Marketplaces {
+				fmt.Fprintf(w, "%s\tgithub.com/%s\n", id, ms.Repo)
+			}
+			w.Flush()
+			listed = true
 		}
 
-		if len(km) == 0 {
+		if !listed {
 			fmt.Println("no marketplaces registered")
-			return nil
 		}
-
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-		fmt.Fprintln(w, "ID\tREPO\tLOCATION")
-		for id, rec := range km {
-			fmt.Fprintf(w, "%s\tgithub.com/%s\t%s\n", id, rec.Source.Repo, rec.InstallLocation)
-		}
-		return w.Flush()
+		return nil
 	},
 }
 

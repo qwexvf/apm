@@ -55,7 +55,88 @@ func Install(
 	return &Result{InstallPath: installPath, Integrity: integrity}, nil
 }
 
-// Uninstall removes the plugin install directory.
+// ExtractComponents scans a plugin cache directory for skills (skills/*/SKILL.md)
+// and agents (agents/*.md) and copies them into the target tool's config layout.
+// Returns the list of destination paths that were created.
+func ExtractComponents(cacheDir, targetDir string) ([]string, error) {
+	var extracted []string
+
+	skillsSrc := filepath.Join(cacheDir, "skills")
+	if entries, err := os.ReadDir(skillsSrc); err == nil {
+		for _, e := range entries {
+			if !e.IsDir() {
+				continue
+			}
+			src := filepath.Join(skillsSrc, e.Name())
+			if _, err := os.Stat(filepath.Join(src, "SKILL.md")); err != nil {
+				continue
+			}
+			dst := target.SkillInstallPath(targetDir, e.Name())
+			if err := os.RemoveAll(dst); err != nil {
+				return extracted, err
+			}
+			if err := copyDir(src, dst); err != nil {
+				return extracted, err
+			}
+			extracted = append(extracted, dst)
+		}
+	}
+
+	agentsSrc := filepath.Join(cacheDir, "agents")
+	if entries, err := os.ReadDir(agentsSrc); err == nil {
+		agentsDst := filepath.Join(targetDir, "agent")
+		if err := os.MkdirAll(agentsDst, 0755); err != nil {
+			return extracted, err
+		}
+		for _, e := range entries {
+			if e.IsDir() || filepath.Ext(e.Name()) != ".md" {
+				continue
+			}
+			src := filepath.Join(agentsSrc, e.Name())
+			dst := filepath.Join(agentsDst, e.Name())
+			if err := copyFile(src, dst); err != nil {
+				return extracted, err
+			}
+			extracted = append(extracted, dst)
+		}
+	}
+
+	return extracted, nil
+}
+
+func copyDir(src, dst string) error {
+	if err := os.MkdirAll(dst, 0755); err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	for _, e := range entries {
+		sp := filepath.Join(src, e.Name())
+		dp := filepath.Join(dst, e.Name())
+		if e.IsDir() {
+			if err := copyDir(sp, dp); err != nil {
+				return err
+			}
+		} else {
+			if err := copyFile(sp, dp); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func copyFile(src, dst string) error {
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(dst, data, 0644)
+}
+
+// Uninstall removes a directory tree (plugin cache dir or extracted component).
 func Uninstall(installPath string) error {
 	if installPath == "" {
 		return nil
