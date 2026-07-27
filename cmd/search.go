@@ -27,7 +27,11 @@ var searchCmd = &cobra.Command{
 			m.PluginManager.Scope = resolveScope()
 		}
 
-		claudeDir := claude.Dir(m.PluginManager.Scope)
+		if err := requireClaude(m, "search"); err != nil {
+			return err
+		}
+
+		claudeDir := targetDir(m)
 		km, err := claude.LoadKnownMarketplaces(claudeDir)
 		if err != nil {
 			return err

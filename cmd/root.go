@@ -6,11 +6,15 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+
+	"github.com/qwexvf/apm/internal/config"
+	"github.com/qwexvf/apm/internal/target"
 )
 
 var (
 	globalScope  bool
 	localScope   bool
+	targetFlag   string
 	buildVersion = "dev"
 	buildCommit  = "none"
 	buildDate    = "unknown"
@@ -39,8 +43,9 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().BoolVar(&globalScope, "global", false, "operate on user-scope (~/.claude/)")
-	rootCmd.PersistentFlags().BoolVar(&localScope, "local", false, "operate on project-scope (.claude/)")
+	rootCmd.PersistentFlags().BoolVar(&globalScope, "global", false, "operate on user-scope (~/.claude/ or ~/.config/opencode/)")
+	rootCmd.PersistentFlags().BoolVar(&localScope, "local", false, "operate on project-scope (.claude/ or .opencode/)")
+	rootCmd.PersistentFlags().StringVar(&targetFlag, "target", "", "target tool: claude (default) or opencode")
 
 	rootCmd.AddCommand(
 		initCmd,
@@ -71,7 +76,43 @@ func resolveScope() string {
 	return "user"
 }
 
+// resolveTarget returns the effective target tool: the --target flag wins,
+// then the manifest's target, then "claude".
+func resolveTarget(m *config.Manifest) string {
+	t := targetFlag
+	if t == "" && m != nil {
+		t = m.PluginManager.TargetOrDefault()
+	}
+	if t == "" {
+		t = target.Claude
+	}
+	if !target.Valid(t) {
+		fmt.Fprintf(os.Stderr, "error: invalid target %q (want %q or %q)\n", t, target.Claude, target.OpenCode)
+		os.Exit(1)
+	}
+	return t
+}
+
+// targetDir returns the config root for the manifest's target and scope,
+// e.g. ~/.claude, ./.claude, ~/.config/opencode, ./.opencode.
+func targetDir(m *config.Manifest) string {
+	return target.Dir(resolveTarget(m), m.PluginManager.Scope)
+}
+
+// requireClaude fails the command when the effective target is not claude.
+// Marketplace plugins, registry, and settings are Claude Code concepts;
+// only skills are portable to other targets.
+func requireClaude(m *config.Manifest, feature string) error {
+	if t := resolveTarget(m); t != target.Claude {
+		return fmt.Errorf("%s: not supported for target %q (claude-only); skills work with any target", feature, t)
+	}
+	return nil
+}
+
 // manifestDir returns the directory where apm.toml lives based on scope.
+// For user scope it follows the --target flag (each tool has its own
+// manifest); without a flag it falls back to an existing opencode manifest
+// when no claude manifest is present. Local scope is always the project root.
 func manifestDir() string {
 	scope := resolveScope()
 	if scope == "local" {
@@ -82,15 +123,18 @@ func manifestDir() string {
 		}
 		return cwd
 	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		home = os.Getenv("HOME")
+	t := targetFlag
+	if t == "" {
+		t = target.Claude
+		claudeManifest := filepath.Join(target.Dir(target.Claude, scope), config.ManifestFile)
+		opencodeManifest := filepath.Join(target.Dir(target.OpenCode, scope), config.ManifestFile)
+		if _, err := os.Stat(claudeManifest); os.IsNotExist(err) {
+			if _, err := os.Stat(opencodeManifest); err == nil {
+				t = target.OpenCode
+			}
+		}
 	}
-	if home == "" {
-		fmt.Fprintln(os.Stderr, "fatal: cannot determine home directory (HOME not set)")
-		os.Exit(1)
-	}
-	return filepath.Join(home, ".claude")
+	return target.Dir(t, scope)
 }
 
 // shortSHA returns the first 12 chars of a SHA, or the whole string if shorter.

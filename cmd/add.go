@@ -53,12 +53,16 @@ func runAddPlugin(arg string) error {
 		m.PluginManager.Scope = resolveScope()
 	}
 
+	if err := requireClaude(m, "marketplace plugins"); err != nil {
+		return err
+	}
+
 	lock, err := config.LoadLock(dir)
 	if err != nil {
 		return err
 	}
 
-	claudeDir := claude.Dir(m.PluginManager.Scope)
+	claudeDir := targetDir(m)
 
 	// find marketplace repo
 	km, err := claude.LoadKnownMarketplaces(claudeDir)
@@ -159,6 +163,9 @@ func runAddSkill(arg string) error {
 	if err != nil {
 		m = config.NewManifest()
 		m.PluginManager.Scope = resolveScope()
+		if targetFlag != "" {
+			m.PluginManager.Target = resolveTarget(nil)
+		}
 	}
 
 	lock, err := config.LoadLock(dir)
@@ -166,7 +173,7 @@ func runAddSkill(arg string) error {
 		return err
 	}
 
-	claudeDir := claude.Dir(m.PluginManager.Scope)
+	toolDir := targetDir(m)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
@@ -179,7 +186,7 @@ func runAddSkill(arg string) error {
 	}
 	fmt.Printf("resolved: %s @ %s (%s)\n", id, res.Version, shortSHA(res.CommitSHA))
 
-	result, err := installer.InstallSkill(ctx, gh, claudeDir, skillName, repo, res.Version, subpath)
+	result, err := installer.InstallSkill(ctx, gh, toolDir, skillName, repo, res.Version, subpath)
 	if err != nil {
 		return err
 	}

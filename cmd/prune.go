@@ -9,6 +9,7 @@ import (
 
 	"github.com/qwexvf/apm/internal/claude"
 	"github.com/qwexvf/apm/internal/config"
+	"github.com/qwexvf/apm/internal/target"
 )
 
 var pruneForce bool
@@ -28,8 +29,8 @@ var pruneCmd = &cobra.Command{
 			return err
 		}
 
-		claudeDir := claude.Dir(m.PluginManager.Scope)
-		cacheDir := claude.CacheDir(claudeDir)
+		toolDir := targetDir(m)
+		cacheDir := claude.CacheDir(toolDir)
 
 		// build set of referenced install paths
 		referenced := make(map[string]bool, len(lock.Plugins))
@@ -89,9 +90,9 @@ var pruneCmd = &cobra.Command{
 			}
 		}
 
-		// orphan skills: dirs under <claudeDir>/skills/ not referenced by lock.
+		// orphan skills: dirs under <toolDir>/skills/ not referenced by lock.
 		// always includes the .staging dir if present.
-		skillsRoot := claude.SkillsDir(claudeDir)
+		skillsRoot := target.SkillsDir(toolDir)
 		if sentries, err := os.ReadDir(skillsRoot); err == nil {
 			for _, e := range sentries {
 				if !e.IsDir() {

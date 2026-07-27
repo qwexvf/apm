@@ -33,25 +33,39 @@ var installCmd = &cobra.Command{
 			return nil
 		}
 
-		claudeDir := claude.Dir(m.PluginManager.Scope)
+		if len(lock.Plugins) > 0 {
+			if err := requireClaude(m, "marketplace plugins"); err != nil {
+				return err
+			}
+		}
+
+		toolDir := targetDir(m)
 		gh := newGH()
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 
-		reg, err := claude.LoadRegistry(claudeDir)
-		if err != nil {
-			return err
-		}
-		settings, err := claude.LoadSettings(claudeDir)
-		if err != nil {
-			return err
-		}
+		isClaude := resolveTarget(m) == "claude"
 
-		// load marketplaces once, not per plugin
-		km, err := claude.LoadKnownMarketplaces(claudeDir)
-		if err != nil {
-			return fmt.Errorf("load marketplaces: %w", err)
+		var reg *claude.Registry
+		var settings *claude.Settings
+		var km claude.KnownMarketplaces
+		if isClaude {
+			var err error
+			reg, err = claude.LoadRegistry(toolDir)
+			if err != nil {
+				return err
+			}
+			settings, err = claude.LoadSettings(toolDir)
+			if err != nil {
+				return err
+			}
+
+			// load marketplaces once, not per plugin
+			km, err = claude.LoadKnownMarketplaces(toolDir)
+			if err != nil {
+				return fmt.Errorf("load marketplaces: %w", err)
+			}
 		}
 
 		lockDirty := false
@@ -74,7 +88,7 @@ var installCmd = &cobra.Command{
 				continue
 			}
 
-			result, err := installer.Install(ctx, gh, claudeDir, marketplace, pluginName, repo, locked.Version)
+			result, err := installer.Install(ctx, gh, toolDir, marketplace, pluginName, repo, locked.Version)
 			if err != nil {
 				failed = append(failed, locked.ID+": "+err.Error())
 				continue
@@ -108,7 +122,7 @@ var installCmd = &cobra.Command{
 				failed = append(failed, locked.ID+": "+err.Error())
 				continue
 			}
-			result, err := installer.InstallSkill(ctx, gh, claudeDir, skillName, repo, locked.Version, subpath)
+			result, err := installer.InstallSkill(ctx, gh, toolDir, skillName, repo, locked.Version, subpath)
 			if err != nil {
 				failed = append(failed, locked.ID+": "+err.Error())
 				continue
@@ -125,11 +139,13 @@ var installCmd = &cobra.Command{
 				return err
 			}
 		}
-		if err := reg.Save(claudeDir); err != nil {
-			return err
-		}
-		if err := settings.Save(claudeDir); err != nil {
-			return err
+		if isClaude {
+			if err := reg.Save(toolDir); err != nil {
+				return err
+			}
+			if err := settings.Save(toolDir); err != nil {
+				return err
+			}
 		}
 
 		if len(failed) > 0 {

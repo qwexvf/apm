@@ -10,6 +10,7 @@ import (
 	"github.com/qwexvf/apm/internal/claude"
 	"github.com/qwexvf/apm/internal/config"
 	"github.com/qwexvf/apm/internal/resolver"
+	"github.com/qwexvf/apm/internal/target"
 )
 
 var lockCmd = &cobra.Command{
@@ -22,14 +23,23 @@ var lockCmd = &cobra.Command{
 			return err
 		}
 
-		claudeDir := claude.Dir(m.PluginManager.Scope)
-		km, err := claude.LoadKnownMarketplaces(claudeDir)
-		if err != nil {
-			return fmt.Errorf("load marketplaces: %w", err)
-		}
-		reg, err := claude.LoadRegistry(claudeDir)
-		if err != nil {
-			return fmt.Errorf("load registry: %w", err)
+		toolDir := targetDir(m)
+
+		var km claude.KnownMarketplaces
+		var reg *claude.Registry
+		if len(m.Plugins) > 0 {
+			if err := requireClaude(m, "marketplace plugins"); err != nil {
+				return err
+			}
+			var err error
+			km, err = claude.LoadKnownMarketplaces(toolDir)
+			if err != nil {
+				return fmt.Errorf("load marketplaces: %w", err)
+			}
+			reg, err = claude.LoadRegistry(toolDir)
+			if err != nil {
+				return fmt.Errorf("load registry: %w", err)
+			}
 		}
 
 		gh := newGH()
@@ -94,7 +104,7 @@ var lockCmd = &cobra.Command{
 			}
 
 			skillName, _, _, _ := config.SplitSkillID(id)
-			expected := claude.SkillInstallPath(claudeDir, skillName)
+			expected := target.SkillInstallPath(toolDir, skillName)
 			_ = subpath // subpath is encoded in id, used by installer
 
 			lock.UpsertSkill(config.LockedSkill{

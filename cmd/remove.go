@@ -35,12 +35,16 @@ func runRemovePlugin(arg string) error {
 		return err
 	}
 
+	if err := requireClaude(m, "marketplace plugins"); err != nil {
+		return err
+	}
+
 	lock, err := config.LoadLock(dir)
 	if err != nil {
 		return err
 	}
 
-	claudeDir := claude.Dir(m.PluginManager.Scope)
+	claudeDir := targetDir(m)
 
 	locked := lock.Get(id)
 	if locked == nil {

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/qwexvf/apm/internal/claude"
+	"github.com/qwexvf/apm/internal/target"
 )
 
 // Downloader fetches and extracts plugin archives.
@@ -66,13 +67,14 @@ func Uninstall(installPath string) error {
 }
 
 // InstallSkill downloads a skill from owner/repo at ref, optionally selects a
-// subpath within the extracted tree, and places it at <claudeDir>/skills/<name>.
+// subpath within the extracted tree, and places it at <toolDir>/skills/<name>.
+// toolDir is the target tool's config root (e.g. ~/.claude, ~/.config/opencode).
 // subpath is a forward-slash relative path inside the repo (e.g. "skills/foo").
 // The destination dir must contain a SKILL.md after extraction.
 func InstallSkill(
 	ctx context.Context,
 	gh Downloader,
-	claudeDir, skillName, repo, ref, subpath string,
+	toolDir, skillName, repo, ref, subpath string,
 ) (*Result, error) {
 	parts := strings.SplitN(repo, "/", 2)
 	if len(parts) != 2 {
@@ -88,9 +90,9 @@ func InstallSkill(
 		subpath = clean
 	}
 
-	finalPath := claude.SkillInstallPath(claudeDir, skillName)
+	finalPath := target.SkillInstallPath(toolDir, skillName)
 
-	skillsRoot := claude.SkillsDir(claudeDir)
+	skillsRoot := target.SkillsDir(toolDir)
 	if err := os.MkdirAll(skillsRoot, 0755); err != nil {
 		return nil, fmt.Errorf("mkdir skills root: %w", err)
 	}

@@ -145,3 +145,31 @@ func TestManifestSaveLoad(t *testing.T) {
 		t.Error("marketplace not round-tripped")
 	}
 }
+
+func TestManifestTargetRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	m := NewManifest()
+	m.PluginManager.Target = "opencode"
+	if err := m.Save(dir); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+
+	m2, err := LoadManifest(dir)
+	if err != nil {
+		t.Fatalf("LoadManifest: %v", err)
+	}
+	if got := m2.PluginManager.TargetOrDefault(); got != "opencode" {
+		t.Errorf("target = %q, want opencode", got)
+	}
+}
+
+func TestTargetOrDefault(t *testing.T) {
+	var c PluginManagerConfig
+	if got := c.TargetOrDefault(); got != "claude" {
+		t.Errorf("empty target = %q, want claude", got)
+	}
+	c.Target = "opencode"
+	if got := c.TargetOrDefault(); got != "opencode" {
+		t.Errorf("target = %q, want opencode", got)
+	}
+}

@@ -11,6 +11,7 @@ import (
 
 	"github.com/qwexvf/apm/internal/claude"
 	"github.com/qwexvf/apm/internal/config"
+	"github.com/qwexvf/apm/internal/target"
 )
 
 var listCmd = &cobra.Command{
@@ -23,10 +24,15 @@ var listCmd = &cobra.Command{
 			return fmt.Errorf("no manifest — run: apm init")
 		}
 
-		claudeDir := claude.Dir(m.PluginManager.Scope)
-		reg, err := claude.LoadRegistry(claudeDir)
-		if err != nil {
-			return err
+		toolDir := targetDir(m)
+
+		var reg *claude.Registry
+		if resolveTarget(m) == "claude" {
+			var err error
+			reg, err = claude.LoadRegistry(toolDir)
+			if err != nil {
+				return err
+			}
 		}
 
 		lock, err := config.LoadLock(dir)
@@ -60,7 +66,10 @@ var listCmd = &cobra.Command{
 			fmt.Fprintln(w, "PLUGIN\tVERSION\tCONSTRAINT\tSTATUS\tPATH")
 
 			for id, constraint := range m.Plugins {
-				entries := reg.Get(id)
+				var entries []claude.InstallEntry
+				if reg != nil {
+					entries = reg.Get(id)
+				}
 				locked := lock.Get(id)
 
 				version := "-"
@@ -76,7 +85,7 @@ var listCmd = &cobra.Command{
 					installPath := locked.InstallPath
 					if installPath == "" {
 						pluginName, mktplace, _ := config.SplitID(id)
-						installPath = claude.PluginInstallPath(claudeDir, mktplace, pluginName, locked.Version)
+						installPath = claude.PluginInstallPath(toolDir, mktplace, pluginName, locked.Version)
 					}
 					if _, err := os.Stat(installPath); err == nil {
 						status = orange("on disk")
@@ -106,7 +115,7 @@ var listCmd = &cobra.Command{
 			for id, constraint := range m.Skills {
 				locked := lock.GetSkill(id)
 				skillName, _, _, _ := config.SplitSkillID(id)
-				expected := claude.SkillInstallPath(claudeDir, skillName)
+				expected := target.SkillInstallPath(toolDir, skillName)
 
 				version := "-"
 				status := yellow("not installed")

@@ -32,7 +32,7 @@ var updateCmd = &cobra.Command{
 			return err
 		}
 
-		claudeDir := claude.Dir(m.PluginManager.Scope)
+		toolDir := targetDir(m)
 		gh := newGH()
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
@@ -80,9 +80,18 @@ var updateCmd = &cobra.Command{
 			constraint string
 		}
 
-		km, err := claude.LoadKnownMarketplaces(claudeDir)
-		if err != nil {
-			return fmt.Errorf("load marketplaces: %w", err)
+		isClaude := resolveTarget(m) == "claude"
+		if len(toUpdate) > 0 && !isClaude {
+			return fmt.Errorf("marketplace plugins are not supported for target %q (claude-only); skills work with any target", resolveTarget(m))
+		}
+
+		var km claude.KnownMarketplaces
+		if isClaude {
+			var err error
+			km, err = claude.LoadKnownMarketplaces(toolDir)
+			if err != nil {
+				return fmt.Errorf("load marketplaces: %w", err)
+			}
 		}
 		var updates []update
 
@@ -204,13 +213,18 @@ var updateCmd = &cobra.Command{
 			}
 		}
 
-		reg, err := claude.LoadRegistry(claudeDir)
-		if err != nil {
-			return err
-		}
-		settings, err := claude.LoadSettings(claudeDir)
-		if err != nil {
-			return err
+		var reg *claude.Registry
+		var settings *claude.Settings
+		if isClaude {
+			var err error
+			reg, err = claude.LoadRegistry(toolDir)
+			if err != nil {
+				return err
+			}
+			settings, err = claude.LoadSettings(toolDir)
+			if err != nil {
+				return err
+			}
 		}
 
 		var failed []string
@@ -220,7 +234,7 @@ var updateCmd = &cobra.Command{
 				return err
 			}
 
-			result, err := installer.Install(ctx, gh, claudeDir, marketplace, pluginName, u.repo, u.newVersion)
+			result, err := installer.Install(ctx, gh, toolDir, marketplace, pluginName, u.repo, u.newVersion)
 			if err != nil {
 				fmt.Printf("  ✗ %s: %v\n", u.id, err)
 				failed = append(failed, u.id+": "+err.Error())
@@ -255,7 +269,7 @@ var updateCmd = &cobra.Command{
 		}
 
 		for _, u := range skillUpdates {
-			result, err := installer.InstallSkill(ctx, gh, claudeDir, u.skillName, u.repo, u.newVersion, u.subpath)
+			result, err := installer.InstallSkill(ctx, gh, toolDir, u.skillName, u.repo, u.newVersion, u.subpath)
 			if err != nil {
 				fmt.Printf("  ✗ %s: %v\n", u.id, err)
 				failed = append(failed, u.id+": "+err.Error())
@@ -282,11 +296,13 @@ var updateCmd = &cobra.Command{
 		if err := lock.Save(dir); err != nil {
 			return err
 		}
-		if err := reg.Save(claudeDir); err != nil {
-			return err
-		}
-		if err := settings.Save(claudeDir); err != nil {
-			return err
+		if isClaude {
+			if err := reg.Save(toolDir); err != nil {
+				return err
+			}
+			if err := settings.Save(toolDir); err != nil {
+				return err
+			}
 		}
 		if len(failed) > 0 {
 			fmt.Println("\nfailed:")

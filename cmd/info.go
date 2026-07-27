@@ -10,6 +10,7 @@ import (
 	"github.com/qwexvf/apm/internal/claude"
 	"github.com/qwexvf/apm/internal/config"
 	"github.com/qwexvf/apm/internal/marketplace"
+	"github.com/qwexvf/apm/internal/target"
 )
 
 var infoCmd = &cobra.Command{
@@ -33,7 +34,11 @@ var infoCmd = &cobra.Command{
 			m.PluginManager.Scope = resolveScope()
 		}
 
-		claudeDir := claude.Dir(m.PluginManager.Scope)
+		if err := requireClaude(m, "marketplace plugins"); err != nil {
+			return err
+		}
+
+		claudeDir := targetDir(m)
 		km, err := claude.LoadKnownMarketplaces(claudeDir)
 		if err != nil {
 			return err
@@ -111,8 +116,8 @@ func runInfoSkill(arg string) error {
 		m.PluginManager.Scope = resolveScope()
 	}
 
-	claudeDir := claude.Dir(m.PluginManager.Scope)
-	expected := claude.SkillInstallPath(claudeDir, skillName)
+	toolDir := targetDir(m)
+	expected := target.SkillInstallPath(toolDir, skillName)
 
 	fmt.Printf("name:        %s\n", skillName)
 	fmt.Printf("id:          %s\n", id)

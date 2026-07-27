@@ -43,7 +43,11 @@ var marketplaceAddCmd = &cobra.Command{
 			m.PluginManager.Scope = resolveScope()
 		}
 
-		claudeDir := claude.Dir(m.PluginManager.Scope)
+		if err := requireClaude(m, "marketplaces"); err != nil {
+			return err
+		}
+
+		claudeDir := targetDir(m)
 		km, err := claude.LoadKnownMarketplaces(claudeDir)
 		if err != nil {
 			return err
@@ -86,7 +90,11 @@ var marketplaceListCmd = &cobra.Command{
 			m.PluginManager.Scope = resolveScope()
 		}
 
-		claudeDir := claude.Dir(m.PluginManager.Scope)
+		if err := requireClaude(m, "marketplaces"); err != nil {
+			return err
+		}
+
+		claudeDir := targetDir(m)
 		km, err := claude.LoadKnownMarketplaces(claudeDir)
 		if err != nil {
 			return err
@@ -117,7 +125,11 @@ var marketplaceUpdateCmd = &cobra.Command{
 			m.PluginManager.Scope = resolveScope()
 		}
 
-		claudeDir := claude.Dir(m.PluginManager.Scope)
+		if err := requireClaude(m, "marketplaces"); err != nil {
+			return err
+		}
+
+		claudeDir := targetDir(m)
 		km, err := claude.LoadKnownMarketplaces(claudeDir)
 		if err != nil {
 			return err

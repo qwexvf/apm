@@ -173,6 +173,57 @@ func TestRunAddSkill_HappyPath(t *testing.T) {
 	}
 }
 
+func TestRunAddSkill_OpenCodeTarget(t *testing.T) {
+	gh := &fakeGH{
+		tags:  []string{"v1.0.0"},
+		sha:   "abcdef0123456789abcdef0123456789abcdef01",
+		files: map[string]string{"SKILL.md": "---\nname: frontend\n---"},
+	}
+	dir := setupLocalScope(t, gh)
+
+	// manifest pinned to the opencode target
+	m := config.NewManifest()
+	m.PluginManager.Scope = "local"
+	m.PluginManager.Target = "opencode"
+	if err := m.Save(dir); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := runAddSkill("frontend@vercel-labs/skills@*"); err != nil {
+		t.Fatalf("runAddSkill: %v", err)
+	}
+
+	want := filepath.Join(dir, ".opencode", "skills", "frontend", "SKILL.md")
+	if _, err := os.Stat(want); err != nil {
+		t.Errorf("SKILL.md not at opencode install path: %v", err)
+	}
+
+	lock, err := config.LoadLock(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if lock.GetSkill("frontend@vercel-labs/skills") == nil {
+		t.Error("skill not in lockfile")
+	}
+}
+
+func TestRunAddPlugin_OpenCodeTarget_Rejected(t *testing.T) {
+	gh := &fakeGH{}
+	dir := setupLocalScope(t, gh)
+
+	m := config.NewManifest()
+	m.PluginManager.Scope = "local"
+	m.PluginManager.Target = "opencode"
+	if err := m.Save(dir); err != nil {
+		t.Fatal(err)
+	}
+
+	err := runAddPlugin("figma@official@^2.1.0")
+	if err == nil || !strings.Contains(err.Error(), "not supported for target") {
+		t.Errorf("expected unsupported-target error, got: %v", err)
+	}
+}
+
 func TestRunRemovePlugin_RoundTrip(t *testing.T) {
 	gh := &fakeGH{
 		tags:  []string{"v2.1.0"},

@@ -24,7 +24,16 @@ type Manifest struct {
 }
 
 type PluginManagerConfig struct {
-	Scope string `toml:"scope"` // "user" or "local"
+	Scope  string `toml:"scope"`            // "user" or "local"
+	Target string `toml:"target,omitempty"` // "claude" (default) or "opencode"
+}
+
+// TargetOrDefault returns the configured target tool, defaulting to "claude".
+func (c PluginManagerConfig) TargetOrDefault() string {
+	if c.Target == "" {
+		return "claude"
+	}
+	return c.Target
 }
 
 func NewManifest() *Manifest {

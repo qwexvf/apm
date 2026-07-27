@@ -1,6 +1,6 @@
 # apm — Agent Plugin Manager
 
-Lockfile-based plugin manager for Claude Code (and AI agent tools).
+Lockfile-based plugin manager for Claude Code and OpenCode.
 
 Claude Code's built-in plugin system has no lockfile, no version constraints, no reproducibility. `apm` fixes that.
 
@@ -70,6 +70,27 @@ go install github.com/qwexvf/apm@latest
 "frontend-design@vercel-labs/skills:skills/frontend-design" = "*"
 "graphify@qwexvf/dotfiles:.claude/skills/graphify"          = "main"
 ```
+
+## Targets
+
+`apm` targets Claude Code by default. To manage **OpenCode** instead, use
+`--target opencode`:
+
+```sh
+apm init --target opencode                                   # ~/.config/opencode/apm.toml
+apm --target opencode add hallmark@Nutlope/hallmark:skills/hallmark
+apm --target opencode list
+```
+
+Skills install into OpenCode's native layout
+(`~/.config/opencode/skills/<name>/`, or `.opencode/skills/<name>/` with
+`--local`), where OpenCode discovers them automatically. The target is
+recorded in `apm.toml` (`[plugin_manager] target = "opencode"`), so
+project-local manifests don't need the flag after `init`.
+
+Marketplace plugins, marketplaces, and `search` are Claude Code concepts and
+are rejected for the opencode target — OpenCode plugins are npm/local JS
+modules, a different packaging model. Skills work with every target.
 
 ## Skills
 
